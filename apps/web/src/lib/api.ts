@@ -7,6 +7,7 @@ import type {
   MarkDoneResponse,
   ProblemFilters,
   ProblemWithSchedule,
+  ReviewScheduleResponse,
   UpdateProblemBody,
 } from "@repo/shared";
 import { supabase } from "./supabase";
@@ -75,6 +76,15 @@ export const api = {
   // Reviews
   markDone(problemId: string): Promise<MarkDoneResponse> {
     return request("/reviews", { method: "POST", body: JSON.stringify({ problemId }) });
+  },
+  undoLastReview(problemId: string): Promise<ReviewScheduleResponse> {
+    return request(`/reviews/${problemId}/last`, { method: "DELETE" });
+  },
+  editLastReview(problemId: string, reviewedAt: string): Promise<ReviewScheduleResponse> {
+    return request(`/reviews/${problemId}/last`, {
+      method: "PATCH",
+      body: JSON.stringify({ reviewedAt }),
+    });
   },
 
   // Schedule / dashboard

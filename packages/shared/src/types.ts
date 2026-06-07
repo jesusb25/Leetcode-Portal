@@ -89,6 +89,19 @@ export interface MarkDoneResponse {
   reviewCount: number;
 }
 
+/** Body for editing when the most recent review actually happened. */
+export interface EditReviewBody {
+  /** ISO timestamp of when the review was actually done. */
+  reviewedAt: string;
+}
+
+/** State of a problem's schedule after an undo/edit. `reviewCount` 0 means reset to never-reviewed. */
+export interface ReviewScheduleResponse {
+  reviewCount: number;
+  lastReviewedAt: string | null;
+  nextReviewAt: string | null;
+}
+
 export interface ProblemFilters {
   category?: string;
   difficulty?: Difficulty;

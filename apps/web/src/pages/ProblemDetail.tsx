@@ -4,12 +4,21 @@ import { useNavigate, useParams } from "react-router-dom";
 import { CategoryBadge } from "../components/CategoryBadge";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
+import { getProblemQuestionUrl } from "../lib/neetcode";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
 function formatDate(iso?: string) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString();
+}
+
+/** Convert an ISO timestamp to a value usable by an <input type="datetime-local">. */
+function toDateTimeLocal(iso?: string) {
+  const d = iso ? new Date(iso) : new Date();
+  // Shift to local time so the input reflects the user's wall clock, then trim seconds/zone.
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
 }
 
 export function ProblemDetail() {
@@ -26,6 +35,10 @@ export function ProblemDetail() {
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [categoryId, setCategoryId] = useState("");
   const [url, setUrl] = useState("");
+
+  // Inline editor for correcting when the last review actually happened.
+  const [editingDate, setEditingDate] = useState(false);
+  const [reviewedAtInput, setReviewedAtInput] = useState("");
 
   async function load() {
     if (!id) return;
@@ -75,6 +88,36 @@ export function ProblemDetail() {
     }
   }
 
+  async function undoReview() {
+    if (!id) return;
+    if (!confirm("Undo the last review for this problem?")) return;
+    setError(null);
+    try {
+      await api.undoLastReview(id);
+      setEditingDate(false);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  function startEditDate() {
+    setReviewedAtInput(toDateTimeLocal(problem?.schedule?.lastReviewedAt));
+    setEditingDate(true);
+  }
+
+  async function saveReviewDate() {
+    if (!id || !reviewedAtInput) return;
+    setError(null);
+    try {
+      await api.editLastReview(id, new Date(reviewedAtInput).toISOString());
+      setEditingDate(false);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function remove() {
     if (!id) return;
     if (!confirm("Delete this problem?")) return;
@@ -87,12 +130,18 @@ export function ProblemDetail() {
   }
 
   if (!problem) {
-    return <p className="text-gray-500">{error ?? "Loading…"}</p>;
+    return <p className="text-gray-500 dark:text-gray-400">{error ?? "Loading…"}</p>;
   }
+
+  const questionUrl = getProblemQuestionUrl(problem);
+  const questionLinkLabel = questionUrl.includes("neetcode.io")
+    ? "Open on NeetCode ↗"
+    : "Open problem ↗";
+  const hasReviews = (problem.schedule?.reviewCount ?? 0) > 0;
 
   return (
     <div className="max-w-2xl space-y-6">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {editing ? (
         <div className="space-y-4">
@@ -102,7 +151,7 @@ export function ProblemDetail() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
           <div>
@@ -110,7 +159,7 @@ export function ProblemDetail() {
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
           <div>
@@ -118,7 +167,7 @@ export function ProblemDetail() {
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             >
               {DIFFICULTIES.map((d) => (
                 <option key={d} value={d}>
@@ -132,7 +181,7 @@ export function ProblemDetail() {
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             >
               <option value="">— none —</option>
               {categories.map((c) => (
@@ -145,13 +194,13 @@ export function ProblemDetail() {
           <div className="flex gap-2">
             <button
               onClick={() => void save()}
-              className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+              className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
             >
               Save
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100"
+              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -166,7 +215,7 @@ export function ProblemDetail() {
                 <DifficultyBadge difficulty={problem.difficulty} />
                 {problem.category && <CategoryBadge name={problem.category.name} />}
                 {problem.isNeetcode150 && (
-                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
                     NeetCode 150
                   </span>
                 )}
@@ -175,28 +224,28 @@ export function ProblemDetail() {
             <div className="flex gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
               >
                 Edit
               </button>
               <button
                 onClick={() => void remove()}
-                className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
               >
                 Delete
               </button>
             </div>
           </div>
 
-          <dl className="grid grid-cols-2 gap-3 rounded border border-gray-200 bg-white p-4 text-sm">
+          <dl className="grid grid-cols-2 gap-3 rounded border border-gray-200 bg-white p-4 text-sm dark:border-gray-800 dark:bg-gray-900">
             <Field label="URL">
               <a
-                href={problem.url}
+                href={questionUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-600 hover:underline"
+                className="text-indigo-600 hover:underline dark:text-indigo-400"
               >
-                Open on LeetCode ↗
+                {questionLinkLabel}
               </a>
             </Field>
             <Field label="LeetCode #">{problem.leetcodeId ?? "—"}</Field>
@@ -204,16 +253,61 @@ export function ProblemDetail() {
               {problem.companies.length > 0 ? problem.companies.join(", ") : "—"}
             </Field>
             <Field label="Reviews completed">{problem.schedule?.reviewCount ?? 0}</Field>
-            <Field label="Last reviewed">{formatDate(problem.schedule?.lastReviewedAt)}</Field>
+            <Field label="Last reviewed">
+              {editingDate ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="datetime-local"
+                    value={reviewedAtInput}
+                    onChange={(e) => setReviewedAtInput(e.target.value)}
+                    className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                  />
+                  <button
+                    onClick={() => void saveReviewDate()}
+                    className="rounded bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingDate(false)}
+                    className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <span className="flex items-center gap-2">
+                  {formatDate(problem.schedule?.lastReviewedAt)}
+                  {hasReviews && (
+                    <button
+                      onClick={startEditDate}
+                      className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </span>
+              )}
+            </Field>
             <Field label="Next review">{formatDate(problem.schedule?.nextReviewAt)}</Field>
           </dl>
 
-          <button
-            onClick={() => void markDone()}
-            className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-          >
-            Mark as Done
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => void markDone()}
+              className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+            >
+              Mark as Done
+            </button>
+            {hasReviews && (
+              <button
+                onClick={() => void undoReview()}
+                className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                Undo last review
+              </button>
+            )}
+          </div>
         </>
       )}
     </div>
@@ -223,7 +317,7 @@ export function ProblemDetail() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</dt>
       <dd className="mt-0.5">{children}</dd>
     </div>
   );

@@ -7,6 +7,35 @@ import { api } from "../lib/api";
 
 const DIFFICULTIES: (Difficulty | "All")[] = ["All", "Easy", "Medium", "Hard"];
 
+/** NeetCode roadmap order; problems are grouped by category in this sequence. */
+const CATEGORY_ORDER = [
+  "arrays-hashing",
+  "two-pointers",
+  "sliding-window",
+  "stack",
+  "binary-search",
+  "linked-list",
+  "trees",
+  "heap-priority-queue",
+  "backtracking",
+  "tries",
+  "graphs",
+  "advanced-graphs",
+  "1d-dynamic-programming",
+  "2d-dynamic-programming",
+  "greedy",
+  "intervals",
+  "math-geometry",
+  "bit-manipulation",
+];
+
+const DIFFICULTY_ORDER: Record<Difficulty, number> = { Easy: 0, Medium: 1, Hard: 2 };
+
+function categoryRank(slug?: string) {
+  const i = slug ? CATEGORY_ORDER.indexOf(slug) : -1;
+  return i === -1 ? CATEGORY_ORDER.length + 1 : i;
+}
+
 function formatDate(iso?: string) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString();
@@ -34,11 +63,17 @@ export function ProblemLibrary() {
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [problems]);
 
-  const filtered = problems.filter((p) => {
-    if (difficultyFilter !== "All" && p.difficulty !== difficultyFilter) return false;
-    if (categoryFilter && p.category?.slug !== categoryFilter) return false;
-    return true;
-  });
+  const filtered = problems
+    .filter((p) => {
+      if (difficultyFilter !== "All" && p.difficulty !== difficultyFilter) return false;
+      if (categoryFilter && p.category?.slug !== categoryFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const byCategory = categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
+      if (byCategory !== 0) return byCategory;
+      return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+    });
 
   return (
     <div className="space-y-4">
@@ -46,7 +81,7 @@ export function ProblemLibrary() {
         <h1 className="text-2xl font-bold">Problem Library</h1>
         <Link
           to="/problems/new"
-          className="rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700"
+          className="rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
         >
           Add Problem
         </Link>
@@ -56,7 +91,7 @@ export function ProblemLibrary() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+          className="rounded border border-gray-300 px-2 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -73,8 +108,8 @@ export function ProblemLibrary() {
               onClick={() => setDifficultyFilter(d)}
               className={`rounded px-3 py-1.5 text-sm font-medium ${
                 difficultyFilter === d
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                  ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-950"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
               }`}
             >
               {d}
@@ -83,14 +118,14 @@ export function ProblemLibrary() {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {loading ? (
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-gray-600">
+            <thead className="border-b border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300">
               <tr>
                 <th className="px-3 py-2 font-medium">Title</th>
                 <th className="px-3 py-2 font-medium">Difficulty</th>
@@ -99,9 +134,9 @@ export function ProblemLibrary() {
                 <th className="px-3 py-2 font-medium">Next Review</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
+                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/70">
                   <td className="px-3 py-2">
                     <Link to={`/problems/${p.id}`} className="font-medium hover:underline">
                       {p.title}
@@ -113,17 +148,17 @@ export function ProblemLibrary() {
                   <td className="px-3 py-2">
                     {p.category ? <CategoryBadge name={p.category.name} /> : "—"}
                   </td>
-                  <td className="px-3 py-2 text-gray-600">
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                     {formatDate(p.schedule?.lastReviewedAt)}
                   </td>
-                  <td className="px-3 py-2 text-gray-600">
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                     {formatDate(p.schedule?.nextReviewAt)}
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-gray-500">
+                  <td colSpan={5} className="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
                     No problems match these filters.
                   </td>
                 </tr>

@@ -82,20 +82,20 @@ export function AddProblem() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://leetcode.com/problems/two-sum/"
-            className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm"
+            className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
           <button
             type="button"
             onClick={() => void handleFetch()}
             disabled={fetching || !url}
-            className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {fetching ? "Fetching…" : "Fetch"}
           </button>
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -104,7 +104,7 @@ export function AddProblem() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -113,7 +113,7 @@ export function AddProblem() {
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           >
             {DIFFICULTIES.map((d) => (
               <option key={d} value={d}>
@@ -128,7 +128,7 @@ export function AddProblem() {
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           >
             <option value="">— none —</option>
             {categories.map((c) => (
@@ -152,12 +152,12 @@ export function AddProblem() {
                 }
               }}
               placeholder="Type and press Enter"
-              className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm"
+              className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
             />
             <button
               type="button"
               onClick={addCompany}
-              className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-100"
+              className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               Add
             </button>
@@ -167,13 +167,13 @@ export function AddProblem() {
               {companies.map((c) => (
                 <span
                   key={c}
-                  className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs"
+                  className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800 dark:text-gray-200"
                 >
                   {c}
                   <button
                     type="button"
                     onClick={() => setCompanies(companies.filter((x) => x !== c))}
-                    className="text-gray-500 hover:text-gray-900"
+                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                   >
                     ×
                   </button>
@@ -186,7 +186,7 @@ export function AddProblem() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+          className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
         >
           {submitting ? "Saving…" : "Save Problem"}
         </button>

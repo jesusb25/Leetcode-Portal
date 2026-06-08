@@ -30,7 +30,7 @@ export function Layout() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950">
+      <header className="sticky top-0 z-30 border-b border-stone-400/80 bg-white/95 backdrop-blur-sm dark:border-gray-600 dark:bg-gray-950">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             type="button"
@@ -38,7 +38,7 @@ export function Layout() {
             aria-label={sidebarOpen ? "Hide navigation" : "Show navigation"}
             aria-expanded={sidebarOpen}
             title={sidebarOpen ? "Hide navigation" : "Show navigation"}
-            className="inline-flex h-8 w-8 items-center justify-center rounded border border-stone-200 bg-white text-stone-500 shadow-sm transition hover:bg-stone-50 hover:text-stone-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 shadow-sm transition hover:bg-stone-50 hover:text-stone-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
           >
             <MenuIcon />
           </button>
@@ -58,7 +58,7 @@ export function Layout() {
 
       <div className="flex flex-1 overflow-hidden">
         <aside
-          className={`shrink-0 overflow-hidden border-r border-stone-200 bg-white transition-[width] duration-200 dark:border-gray-800 dark:bg-gray-950 ${
+          className={`shrink-0 overflow-hidden border-r border-stone-400 bg-white transition-[width] duration-200 dark:border-gray-600 dark:bg-gray-950 ${
             sidebarOpen ? "w-52" : "w-0 border-r-0"
           }`}
         >
@@ -74,7 +74,7 @@ export function Layout() {
             <NavLink to="/problems/new" className={linkClass}>
               Add Problem
             </NavLink>
-            <div className="mt-auto border-t border-stone-200 pt-2 dark:border-gray-700">
+            <div className="mt-auto border-t border-stone-400 pt-2 dark:border-gray-600">
               <SettingsMenu />
             </div>
           </nav>

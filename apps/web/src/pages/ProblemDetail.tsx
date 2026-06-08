@@ -70,6 +70,7 @@ export function ProblemDetail() {
   const [reviewLog, setReviewLog] = useState<Review[]>([]);
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [reviewedAtInput, setReviewedAtInput] = useState("");
+  const [confirmResetProgress, setConfirmResetProgress] = useState(false);
 
   // --- Undo toast ---
   const [undoToast, setUndoToast] = useState<
@@ -189,6 +190,18 @@ export function ProblemDetail() {
     setEditingReviewId(review.id);
   }
 
+  async function resetProblemProgress() {
+    if (!id) return;
+    setError(null);
+    try {
+      await api.resetProblemProgress(id);
+      setConfirmResetProgress(false);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function saveReviewEdit() {
     if (!id || !editingReviewId || !reviewedAtInput) return;
     setError(null);
@@ -277,9 +290,9 @@ export function ProblemDetail() {
   const hasReviews = (problem.schedule?.reviewCount ?? 0) > 0;
 
   const inputCls =
-    "w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
+    "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
   const sectionCls =
-    "space-y-3 rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900";
+    "space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900";
   const sectionHeadCls =
     "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-200";
 
@@ -354,7 +367,7 @@ export function ProblemDetail() {
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="rounded border border-stone-200 px-4 py-2 text-sm text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="rounded border border-stone-400 px-4 py-2 text-sm text-stone-600 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -381,13 +394,13 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="rounded border border-stone-400 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
               <button
                 onClick={startDeleteProblem}
-                className="rounded border border-stone-200 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-gray-800"
+                className="rounded border border-stone-400 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-gray-800"
               >
                 Delete
               </button>
@@ -395,7 +408,7 @@ export function ProblemDetail() {
           </div>
 
           {/* ── Compact metadata bar ── */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-stone-400 bg-white px-4 py-3 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-900">
             <div className="flex flex-wrap gap-x-5 gap-y-1.5">
               <MetaChip label="URL">
                 <a
@@ -432,7 +445,7 @@ export function ProblemDetail() {
                 <select
                   value={language}
                   onChange={(e) => markStudyDirty(setLanguage)(e.target.value)}
-                  className="rounded-lg border border-stone-200 px-2 py-1 text-xs text-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                  className="rounded-lg border border-stone-400 px-2 py-1 text-xs text-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300"
                 >
                   {LANGUAGES.map((l) => (
                     <option key={l} value={l}>
@@ -505,13 +518,42 @@ export function ProblemDetail() {
 
           {/* ── Review History ── */}
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">Review history</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">Review history</h2>
+              {hasReviews &&
+                (confirmResetProgress ? (
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <span className="text-stone-500 dark:text-gray-400">
+                      Reset all progress for this problem?
+                    </span>
+                    <button
+                      onClick={() => void resetProblemProgress()}
+                      className="rounded bg-red-600 px-2 py-1 text-white transition hover:bg-red-700"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => setConfirmResetProgress(false)}
+                      className="rounded border border-stone-400 px-2 py-1 text-stone-600 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmResetProgress(true)}
+                    className="text-xs font-medium text-red-500 transition hover:underline dark:text-red-400"
+                  >
+                    Reset progress
+                  </button>
+                ))}
+            </div>
             {!hasReviews ? (
               <p className="text-sm text-stone-500 dark:text-gray-400">
                 Not reviewed yet. Click "Mark as Done" to log your first review.
               </p>
             ) : (
-              <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+              <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
                 {reviewLog.map((r) => (
                   <li
                     key={r.id}
@@ -523,7 +565,7 @@ export function ProblemDetail() {
                           type="datetime-local"
                           value={reviewedAtInput}
                           onChange={(e) => setReviewedAtInput(e.target.value)}
-                          className="rounded-lg border border-stone-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                          className="rounded-lg border border-stone-400 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                         />
                         <button
                           onClick={() => void saveReviewEdit()}
@@ -533,7 +575,7 @@ export function ProblemDetail() {
                         </button>
                         <button
                           onClick={() => setEditingReviewId(null)}
-                          className="rounded border border-stone-200 px-2 py-1 text-xs text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                          className="rounded border border-stone-400 px-2 py-1 text-xs text-stone-600 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                         >
                           Cancel
                         </button>

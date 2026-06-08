@@ -1,10 +1,59 @@
 import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
+import { REVIEW_INTERVALS_DAYS } from "@repo/shared";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 
 const DIFFICULTIES: (Difficulty | "All")[] = ["All", "Easy", "Medium", "Hard"];
+
+/**
+ * A problem's progress, derived from its spaced-repetition schedule:
+ *   • "new"       — never reviewed (no schedule / reviewCount 0)
+ *   • "attempted" — reviewed at least once but not yet at the longest interval
+ *   • "mastered"  — graduated to the final review interval (the 30-day step)
+ */
+type ProblemStatus = "new" | "attempted" | "mastered";
+
+const STATUSES: { value: ProblemStatus | "All"; label: string }[] = [
+  { value: "All", label: "All" },
+  { value: "new", label: "New" },
+  { value: "attempted", label: "Attempted" },
+  { value: "mastered", label: "Mastered" },
+];
+
+const MASTERED_REVIEW_COUNT = REVIEW_INTERVALS_DAYS.length;
+
+function problemStatus(p: ProblemWithSchedule): ProblemStatus {
+  const count = p.schedule?.reviewCount ?? 0;
+  if (count >= MASTERED_REVIEW_COUNT) return "mastered";
+  if (count >= 1) return "attempted";
+  return "new";
+}
+
+const STATUS_STYLES: Record<ProblemStatus, { label: string; cls: string }> = {
+  new: {
+    label: "New",
+    cls: "bg-stone-100 text-stone-500 dark:bg-gray-800 dark:text-gray-400",
+  },
+  attempted: {
+    label: "Attempted",
+    cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
+  },
+  mastered: {
+    label: "Mastered",
+    cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
+  },
+};
+
+function StatusBadge({ status }: { status: ProblemStatus }) {
+  const { label, cls } = STATUS_STYLES[status];
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
+      {label}
+    </span>
+  );
+}
 
 /** NeetCode roadmap order; problems are grouped by category in this sequence. */
 const CATEGORY_ORDER = [
@@ -46,6 +95,7 @@ export function ProblemLibrary() {
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "All">("All");
+  const [statusFilter, setStatusFilter] = useState<ProblemStatus | "All">("All");
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
   function toggleGroup(key: string) {
@@ -54,6 +104,15 @@ export function ProblemLibrary() {
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
+  }
+
+  const hasActiveFilters =
+    categoryFilter !== "" || difficultyFilter !== "All" || statusFilter !== "All";
+
+  function clearFilters() {
+    setCategoryFilter("");
+    setDifficultyFilter("All");
+    setStatusFilter("All");
   }
 
   useEffect(() => {
@@ -75,6 +134,7 @@ export function ProblemLibrary() {
     .filter((p) => {
       if (difficultyFilter !== "All" && p.difficulty !== difficultyFilter) return false;
       if (categoryFilter && p.category?.slug !== categoryFilter) return false;
+      if (statusFilter !== "All" && problemStatus(p) !== statusFilter) return false;
       return true;
     })
     .sort((a, b) => {
@@ -97,11 +157,11 @@ export function ProblemLibrary() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="h-9 rounded border border-stone-400 bg-white px-3 text-sm leading-none text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -111,20 +171,44 @@ export function ProblemLibrary() {
           ))}
         </select>
 
-        <div className="flex gap-1">
-          {DIFFICULTIES.map((d) => (
-            <button
-              key={d}
-              onClick={() => setDifficultyFilter(d)}
-              className={`rounded px-3 py-1.5 text-sm font-medium transition ${
-                difficultyFilter === d
-                  ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
-                  : "border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-stone-400 dark:text-gray-500">Difficulty:</span>
+          <div className="flex gap-1">
+            {DIFFICULTIES.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDifficultyFilter(d)}
+                className={`h-9 rounded px-3 text-sm font-medium transition ${
+                  difficultyFilter === d
+                    ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
+                    : "border border-stone-400 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <span className="hidden h-6 w-px self-center bg-stone-200 dark:bg-gray-700 sm:mx-2 sm:block" />
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-stone-400 dark:text-gray-500">Status:</span>
+          <div className="flex gap-1">
+            {STATUSES.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStatusFilter(s.value)}
+                className={`h-9 rounded px-3 text-sm font-medium transition ${
+                  statusFilter === s.value
+                    ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
+                    : "border border-stone-400 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -133,7 +217,27 @@ export function ProblemLibrary() {
       {loading ? (
         <p className="text-stone-500 dark:text-gray-400">Loading…</p>
       ) : groups.length === 0 ? (
-        <p className="text-stone-500 dark:text-gray-400">No problems match these filters.</p>
+        <div className="rounded-xl border border-dashed border-stone-300 bg-white/50 px-6 py-12 text-center dark:border-gray-600 dark:bg-gray-900/40">
+          <p className="text-sm text-stone-500 dark:text-gray-400">
+            No problems match these filters.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="h-9 rounded border border-stone-400 bg-white px-3 font-medium text-stone-700 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Clear Filters
+              </button>
+            )}
+            <Link
+              to="/problems/new"
+              className="font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline dark:text-gray-400 dark:hover:text-gray-100"
+            >
+              Add Problem
+            </Link>
+          </div>
+        </div>
       ) : (
         <div className="space-y-2">
           {groups.map((group) => {
@@ -141,7 +245,7 @@ export function ProblemLibrary() {
             return (
               <div
                 key={group.key}
-                className="rounded-xl border border-stone-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+                className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
               >
                 <div
                   role="button"
@@ -177,7 +281,7 @@ export function ProblemLibrary() {
                   }}
                 >
                   <div style={{ overflow: "hidden" }}>
-                    <ul className="divide-y divide-stone-100 border-t border-stone-100 dark:divide-gray-800 dark:border-gray-800">
+                    <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
                       {group.problems.map((p) => (
                         <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3">
                           <div className="min-w-0">
@@ -189,6 +293,7 @@ export function ProblemLibrary() {
                             </Link>
                             <div className="mt-1 flex flex-wrap items-center gap-2">
                               <DifficultyBadge difficulty={p.difficulty} />
+                              <StatusBadge status={problemStatus(p)} />
                               <span className="text-xs text-stone-400 dark:text-gray-500">
                                 Reviewed {formatDate(p.schedule?.lastReviewedAt)} · Next{" "}
                                 {formatDate(p.schedule?.nextReviewAt)}

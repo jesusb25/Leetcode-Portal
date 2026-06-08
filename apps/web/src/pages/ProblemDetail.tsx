@@ -280,7 +280,7 @@ export function ProblemDetail() {
   const sectionCls =
     "space-y-3 rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900";
   const sectionHeadCls =
-    "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-500";
+    "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-200";
 
   return (
     <div className="max-w-2xl space-y-5 pb-32">

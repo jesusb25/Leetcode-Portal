@@ -9,6 +9,10 @@ export function AddProblem() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
 
+  useEffect(() => {
+    sessionStorage.setItem("problem-back-url", "/problems/new");
+  }, []);
+
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");

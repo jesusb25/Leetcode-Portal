@@ -61,7 +61,6 @@ describe("GET /api/v1/problems", () => {
             title: "Two Sum",
             url: "https://leetcode.com/problems/two-sum/",
             difficulty: "Easy",
-            createdAt: new Date("2026-06-01T00:00:00.000Z"),
           },
           category: { id: "category-1", name: "Arrays & Hashing", slug: "arrays-hashing" },
           schedule: {
@@ -113,7 +112,6 @@ describe("POST /api/v1/problems", () => {
           url: "https://leetcode.com/problems/valid-anagram/",
           difficulty: "Easy",
           categoryId: null,
-          createdAt: new Date("2026-06-01T00:00:00.000Z"),
         },
       ]) as never,
     );

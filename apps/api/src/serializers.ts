@@ -30,12 +30,11 @@ export function serializeProblem(
     isNeetcode150: row.isNeetcode150 ?? false,
     notes: row.notes ?? undefined,
     codeSnippet: row.codeSnippet ?? undefined,
-    githubUrl: row.githubUrl ?? undefined,
     timeComplexity: row.timeComplexity ?? undefined,
     spaceComplexity: row.spaceComplexity ?? undefined,
     language: row.language ?? undefined,
     problemSummary: row.problemSummary ?? undefined,
-    createdAt: (row.createdAt ?? new Date()).toISOString(),
+    confidence: row.confidence ?? undefined,
   };
 }
 

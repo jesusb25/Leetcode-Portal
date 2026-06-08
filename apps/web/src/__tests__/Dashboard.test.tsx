@@ -27,7 +27,6 @@ const dueProblem: DueProblem = {
   url: "https://leetcode.com/problems/two-sum/",
   difficulty: "Easy",
   isNeetcode150: false,
-  createdAt: "2026-06-01T00:00:00.000Z",
   daysOverdue: 0,
 };
 

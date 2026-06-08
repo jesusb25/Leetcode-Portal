@@ -96,12 +96,22 @@ export function ProblemLibrary() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "All">("All");
   const [statusFilter, setStatusFilter] = useState<ProblemStatus | "All">("All");
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+    try {
+      const stored = sessionStorage.getItem("library-open-groups");
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   function toggleGroup(key: string) {
     setOpenGroups((prev) => {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
+      try {
+        sessionStorage.setItem("library-open-groups", JSON.stringify([...next]));
+      } catch {}
       return next;
     });
   }
@@ -114,6 +124,10 @@ export function ProblemLibrary() {
     setDifficultyFilter("All");
     setStatusFilter("All");
   }
+
+  useEffect(() => {
+    sessionStorage.setItem("problem-back-url", "/problems");
+  }, []);
 
   useEffect(() => {
     setLoading(true);

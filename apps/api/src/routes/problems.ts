@@ -111,11 +111,11 @@ problemsRouter.put(
         isNeetcode150: body.isNeetcode150,
         notes: body.notes,
         codeSnippet: body.codeSnippet,
-        githubUrl: body.githubUrl,
         timeComplexity: body.timeComplexity,
         spaceComplexity: body.spaceComplexity,
         language: body.language,
         problemSummary: body.problemSummary,
+        confidence: body.confidence,
       })
       .where(and(eq(problems.id, req.params.id), eq(problems.userId, req.userId)))
       .returning();

@@ -22,7 +22,7 @@ function makeProblemRow(overrides: Partial<ProblemRow> = {}): ProblemRow {
     spaceComplexity: null,
     language: null,
     problemSummary: null,
-    createdAt: new Date("2026-06-01T00:00:00.000Z"),
+    confidence: null,
     ...overrides,
   };
 }
@@ -32,7 +32,6 @@ function makeCategoryRow(overrides: Partial<CategoryRow> = {}): CategoryRow {
     id: "category-1",
     name: "Arrays & Hashing",
     slug: "arrays-hashing",
-    createdAt: new Date("2026-06-01T00:00:00.000Z"),
     ...overrides,
   };
 }
@@ -45,7 +44,6 @@ function makeScheduleRow(overrides: Partial<ProblemScheduleRow> = {}): ProblemSc
     reviewCount: 2,
     lastReviewedAt: new Date("2026-06-05T00:00:00.000Z"),
     nextReviewAt: new Date("2026-06-12T00:00:00.000Z"),
-    createdAt: new Date("2026-06-01T00:00:00.000Z"),
     ...overrides,
   };
 }
@@ -70,11 +68,6 @@ describe("serializeProblem", () => {
     expect(result.leetcodeId).toBeUndefined();
   });
 
-  it("falls back to a Date when createdAt is null, producing an ISO string", () => {
-    const result = serializeProblem(makeProblemRow({ createdAt: null }), null);
-    expect(typeof result.createdAt).toBe("string");
-    expect(new Date(result.createdAt).toISOString()).toBe(result.createdAt);
-  });
 });
 
 describe("serializeSchedule", () => {

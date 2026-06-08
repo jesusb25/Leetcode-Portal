@@ -51,6 +51,7 @@ export function Dashboard() {
   }
 
   useEffect(() => {
+    sessionStorage.setItem("problem-back-url", "/dashboard");
     void load();
   }, []);
 

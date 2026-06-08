@@ -16,6 +16,13 @@ export interface Problem {
   category?: Category;
   companies: string[];
   isNeetcode150: boolean;
+  notes?: string;
+  codeSnippet?: string;
+  githubUrl?: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+  language?: string;
+  problemSummary?: string;
   createdAt: string;
 }
 
@@ -32,6 +39,7 @@ export interface Review {
   reviewedAt: string;
   reviewCount: number;
   nextReviewAt: string;
+  confidence?: string;
 }
 
 export interface DashboardStats {
@@ -59,8 +67,14 @@ export interface CreateProblemBody {
   url: string;
   difficulty: Difficulty;
   categoryId?: string;
-  companies?: string[];
   isNeetcode150?: boolean;
+  notes?: string;
+  codeSnippet?: string;
+  githubUrl?: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+  language?: string;
+  problemSummary?: string;
 }
 
 export type UpdateProblemBody = Partial<CreateProblemBody>;
@@ -82,6 +96,7 @@ export interface FetchMetadataResponse {
 
 export interface MarkDoneBody {
   problemId: string;
+  confidence?: string;
 }
 
 export interface MarkDoneResponse {

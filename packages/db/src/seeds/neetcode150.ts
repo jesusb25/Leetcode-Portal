@@ -1,9 +1,7 @@
 /**
  * The full NeetCode 150 list (spec §8). Sourced from https://neetcode.io/roadmap.
  *
- * `category` must match a slug in `categories.ts`. `companies` is intentionally
- * left empty — accurate company tags aren't reliably sourceable offline and can be
- * backfilled later via the LeetCode metadata scraper.
+ * `category` must match a slug in `categories.ts`.
  */
 
 export type SeedProblem = {
@@ -12,7 +10,6 @@ export type SeedProblem = {
   url: string;
   difficulty: "Easy" | "Medium" | "Hard";
   category: string; // must match a category slug
-  companies: string[];
 };
 
 type Entry = [
@@ -218,6 +215,5 @@ export const neetcode150: SeedProblem[] = entries.map(
     url: `https://leetcode.com/problems/${slug}/`,
     difficulty,
     category,
-    companies: [],
   }),
 );

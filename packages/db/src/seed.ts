@@ -50,7 +50,6 @@ export async function runSeed(ownerUserId: string): Promise<SeedResult> {
         url: p.url,
         difficulty: p.difficulty,
         categoryId,
-        companies: p.companies,
         isNeetcode150: true,
       };
     });

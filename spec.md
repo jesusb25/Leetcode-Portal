@@ -61,7 +61,6 @@ problems
   url             text NOT NULL               -- full LeetCode URL
   difficulty      text CHECK (difficulty IN ('Easy', 'Medium', 'Hard'))
   category_id     uuid REFERENCES categories
-  companies       text[]                      -- e.g. ["Google", "Amazon"]
   is_neetcode_150 boolean DEFAULT false
   created_at      timestamptz DEFAULT now()
 
@@ -197,7 +196,6 @@ query getProblem($titleSlug: String!) {
       name
       slug
     }
-    companyTagStats
   }
 }
 ```
@@ -219,7 +217,6 @@ type SeedProblem = {
   url: string;
   difficulty: "Easy" | "Medium" | "Hard";
   category: string; // must match a category slug
-  companies: string[];
 };
 ```
 
@@ -290,7 +287,6 @@ export interface Problem {
   url: string;
   difficulty: Difficulty;
   category?: Category;
-  companies: string[];
   isNeetcode150: boolean;
   createdAt: string;
 }

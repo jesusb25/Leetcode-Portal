@@ -59,7 +59,7 @@ export function ProblemLibrary() {
   const categories = useMemo<Category[]>(() => {
     const map = new Map<string, Category>();
     for (const p of problems) if (p.category) map.set(p.category.id, p.category);
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return [...map.values()].sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug));
   }, [problems]);
 
   const filtered = problems

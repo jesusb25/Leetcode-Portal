@@ -14,9 +14,6 @@ export function AddProblem() {
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [categoryId, setCategoryId] = useState("");
   const [leetcodeId, setLeetcodeId] = useState<number | undefined>();
-  const [companies, setCompanies] = useState<string[]>([]);
-  const [companyInput, setCompanyInput] = useState("");
-
   const [fetching, setFetching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +44,6 @@ export function AddProblem() {
     }
   }
 
-  function addCompany() {
-    const v = companyInput.trim();
-    if (v && !companies.includes(v)) setCompanies([...companies, v]);
-    setCompanyInput("");
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -64,7 +55,6 @@ export function AddProblem() {
         difficulty,
         leetcodeId,
         categoryId: categoryId || undefined,
-        companies,
       });
       navigate(`/problems/${created.id}`);
     } catch (err) {
@@ -146,50 +136,6 @@ export function AddProblem() {
               </option>
             ))}
           </select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">Companies</label>
-          <div className="flex gap-2">
-            <input
-              value={companyInput}
-              onChange={(e) => setCompanyInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addCompany();
-                }
-              }}
-              placeholder="Type and press Enter"
-              className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-            />
-            <button
-              type="button"
-              onClick={addCompany}
-              className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-            >
-              Add
-            </button>
-          </div>
-          {companies.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {companies.map((c) => (
-                <span
-                  key={c}
-                  className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800 dark:text-gray-200"
-                >
-                  {c}
-                  <button
-                    type="button"
-                    onClick={() => setCompanies(companies.filter((x) => x !== c))}
-                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         <button

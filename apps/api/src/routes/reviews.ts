@@ -109,7 +109,7 @@ async function scheduleState(problemId: string) {
 reviewsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
-    const { problemId } = req.body as MarkDoneBody;
+    const { problemId, confidence } = req.body as MarkDoneBody;
     if (!problemId) throw new HttpError(400, "problemId is required.");
 
     await assertOwnedProblem(problemId, req.userId);
@@ -156,6 +156,7 @@ reviewsRouter.post(
       reviewedAt: now,
       reviewCount: newCount,
       nextReviewAt,
+      confidence: confidence ?? null,
     });
 
     res.status(201).json({
@@ -254,6 +255,7 @@ reviewsRouter.get(
         reviewedAt: (r.reviewedAt ?? new Date()).toISOString(),
         reviewCount: r.reviewCount,
         nextReviewAt: r.nextReviewAt.toISOString(),
+        confidence: r.confidence ?? undefined,
       })),
     );
   }),

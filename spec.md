@@ -1,4 +1,4 @@
-# LeetCode Spaced Repetition System — MVP Product Spec
+# LeetCode Spaced Repetition System — Product Spec
 
 ---
 
@@ -12,11 +12,11 @@ A full-stack web application for spaced repetition practice of LeetCode problems
 
 | Layer      | Technology                                                              |
 | ---------- | ----------------------------------------------------------------------- |
-| Frontend   | React + Vite + TypeScript + Tailwind CSS                                |
+| Frontend   | React 18 + Vite + TypeScript + Tailwind CSS + React Router v6           |
 | Backend    | Node.js + Express + TypeScript                                          |
 | Database   | PostgreSQL (via Supabase)                                               |
 | ORM        | Drizzle ORM                                                             |
-| Auth       | Supabase Auth (JWT, email/password) — wired in but no login UI in MVP   |
+| Auth       | Supabase Auth (JWT, email/password) — middleware validates JWT; dev bypass via `DEV_USER_ID` env var |
 | Deployment | Vercel (frontend), Railway or Render (backend)                          |
 | Monorepo   | Turborepo with `apps/web`, `apps/api`, `packages/db`, `packages/shared` |
 
@@ -31,7 +31,7 @@ A full-stack web application for spaced repetition practice of LeetCode problems
 │   └── api/                  # Express backend
 ├── packages/
 │   ├── db/                   # Drizzle schema, migrations, seed
-│   └── shared/               # Shared TypeScript types
+│   └── shared/               # Shared TypeScript types and scheduler logic
 ├── turbo.json
 └── package.json
 ```
@@ -40,7 +40,7 @@ A full-stack web application for spaced repetition practice of LeetCode problems
 
 ## 4. Database Schema
 
-All tables include `user_id` (UUID FK to Supabase auth.users) for future multi-user support. Row-Level Security (RLS) policies should be defined on all tables so that `user_id = auth.uid()`.
+All tables include `user_id` (UUID, plain column — real FK to `auth.users` and RLS policies applied via hand-written migration `0001_rls.sql`). Row-Level Security policies enforce `user_id = auth.uid()`.
 
 ### 4.1 Tables
 
@@ -54,34 +54,41 @@ categories
 
 -- Problems
 problems
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-  user_id         uuid REFERENCES auth.users NOT NULL
-  leetcode_id     integer                     -- e.g. 1 for Two Sum
-  title           text NOT NULL
-  url             text NOT NULL               -- full LeetCode URL
-  difficulty      text CHECK (difficulty IN ('Easy', 'Medium', 'Hard'))
-  category_id     uuid REFERENCES categories
-  is_neetcode_150 boolean DEFAULT false
-  created_at      timestamptz DEFAULT now()
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid()
+  user_id          uuid NOT NULL
+  leetcode_id      integer                     -- e.g. 1 for Two Sum
+  title            text NOT NULL
+  url              text NOT NULL               -- full LeetCode URL
+  difficulty       text CHECK (difficulty IN ('Easy', 'Medium', 'Hard'))
+  category_id      uuid REFERENCES categories
+  is_neetcode_150  boolean DEFAULT false
+  notes            text                        -- personal notes
+  code_snippet     text                        -- accepted solution
+  time_complexity  text                        -- e.g. "O(N)"
+  space_complexity text                        -- e.g. "O(1)"
+  language         text                        -- e.g. "Python"
+  problem_summary  text                        -- brief problem context / constraints
+  created_at       timestamptz DEFAULT now()
 
 -- Reviews (one row per review event)
 reviews
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-  user_id         uuid REFERENCES auth.users NOT NULL
-  problem_id      uuid REFERENCES problems NOT NULL
+  user_id         uuid NOT NULL
+  problem_id      uuid REFERENCES problems ON DELETE CASCADE NOT NULL
   reviewed_at     timestamptz DEFAULT now()
   review_count    integer NOT NULL            -- which review # this was (1, 2, 3…)
   next_review_at  timestamptz NOT NULL        -- computed by scheduler
+  confidence      text                        -- optional self-reported confidence
 
 -- Scheduling state (one row per problem per user)
 problem_schedule
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-  user_id         uuid REFERENCES auth.users NOT NULL
-  problem_id      uuid REFERENCES problems NOT NULL UNIQUE
-  review_count    integer DEFAULT 0           -- total times reviewed
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid()
+  user_id          uuid NOT NULL
+  problem_id       uuid REFERENCES problems ON DELETE CASCADE NOT NULL UNIQUE
+  review_count     integer DEFAULT 0           -- total times reviewed
   last_reviewed_at timestamptz
-  next_review_at  timestamptz                 -- null = never reviewed, show immediately
-  created_at      timestamptz DEFAULT now()
+  next_review_at   timestamptz                 -- null = never reviewed, show immediately
+  created_at       timestamptz DEFAULT now()
 ```
 
 ### 4.2 Categories Seed Data (NeetCode 150 sections)
@@ -111,26 +118,22 @@ Overdue reset rule:
   If (now - next_review_at) > (scheduled_interval * 2) → reset review_count to 0
 ```
 
-Implement this as a pure function in `packages/shared/src/scheduler.ts` so both frontend and backend can import it.
+Implemented as pure functions in `packages/shared/src/scheduler.ts`:
 
 ```typescript
-// packages/shared/src/scheduler.ts
-export function computeNextReview(reviewCount: number, now: Date): Date {
-  const intervals = [1, 3, 7, 14, 30];
-  const days = intervals[Math.min(reviewCount, intervals.length - 1)];
-  const next = new Date(now);
-  next.setDate(next.getDate() + days);
-  return next;
-}
+export const REVIEW_INTERVALS_DAYS = [1, 3, 7, 14, 30] as const;
+
+// Takes the pre-increment count so that the first review (prevCount 0) yields +1 day.
+export function computeNextReview(reviewCount: number, now: Date): Date;
 
 export function shouldResetSchedule(
   nextReviewAt: Date,
   scheduledIntervalDays: number,
   now: Date,
-): boolean {
-  const overdueDays = (now.getTime() - nextReviewAt.getTime()) / 86400000;
-  return overdueDays > scheduledIntervalDays * 2;
-}
+): boolean;
+
+// Returns the interval (days) that corresponds to a given review count.
+export function intervalForReviewCount(reviewCount: number): number;
 ```
 
 ---
@@ -139,7 +142,9 @@ export function shouldResetSchedule(
 
 Base path: `/api/v1`
 
-All endpoints require a valid Supabase JWT in the `Authorization: Bearer <token>` header. Middleware should validate the JWT and attach `req.userId`.
+All endpoints require a valid Supabase JWT in the `Authorization: Bearer <token>` header. Middleware validates the JWT and attaches `req.userId`. In local dev, `DEV_USER_ID` env var bypasses JWT validation.
+
+Health check (no auth): `GET /health`
 
 ### Problems
 
@@ -147,80 +152,93 @@ All endpoints require a valid Supabase JWT in the `Authorization: Bearer <token>
 GET    /problems              List all problems (filters: category, difficulty, due)
 GET    /problems/:id          Get single problem with schedule state
 POST   /problems              Create a problem (manual entry)
-PUT    /problems/:id          Update problem metadata
+PUT    /problems/:id          Update problem metadata and/or study notes
 DELETE /problems/:id          Delete a problem
 
 POST   /problems/fetch-metadata   Body: { url: string }
                                   Scrape LeetCode URL and return metadata
-                                  Returns: { title, difficulty, leetcodeId, categories }
+                                  Returns: { title, difficulty, leetcodeId, categorySlug, rawTags }
 ```
 
 ### Reviews
 
 ```
-POST   /reviews               Mark a problem as done
-                              Body: { problemId: string }
-                              Runs scheduler, updates problem_schedule, inserts review row
-                              Returns: { nextReviewAt, reviewCount }
+POST   /reviews
+  Body: { problemId: string, confidence?: string }
+  Marks a problem done. Runs scheduler (with overdue-reset), upserts problem_schedule,
+  inserts review row.
+  Returns: { nextReviewAt, reviewCount }
+
+DELETE /reviews/:problemId/last
+  Removes the most recent review and re-derives schedule from remaining history.
+  Returns: ReviewScheduleResponse
+
+PATCH  /reviews/:problemId/last
+  Body: { reviewedAt: string }  (ISO timestamp)
+  Corrects when the most recent review happened. Recomputes next_review_at.
+  Returns: ReviewScheduleResponse
+
+GET    /reviews/:problemId/log
+  Full review history for a problem, most recent first.
+  Returns: Review[]
+
+PATCH  /reviews/:problemId/log/:reviewId
+  Body: { reviewedAt: string }
+  Edits a specific past review's timestamp. Rebuilds entire review chain to keep
+  review_count sequence and next_review_at consistent.
+  Returns: ReviewScheduleResponse
+
+DELETE /reviews/:problemId/log/:reviewId
+  Removes a specific past review. Rebuilds review chain.
+  Returns: ReviewScheduleResponse
 ```
 
 ### Schedule / Dashboard
 
 ```
-GET    /schedule/due          Problems due today (next_review_at <= now), sorted by most overdue first
-GET    /schedule/stats        { dueToday: number, completedToday: number }
+GET    /schedule/due          Problems due now (next_review_at <= now or never reviewed),
+                              sorted by most overdue first. Never-reviewed problems rank above
+                              all dated rows. Returns: DueProblem[]
+
+GET    /schedule/stats        Returns: { dueToday: number, completedToday: number }
 ```
 
-### Seed
+### Categories
 
 ```
-POST   /admin/seed            Seed NeetCode 150 problems (idempotent, dev only)
+GET    /categories            List all categories (used to populate dropdowns)
+```
+
+### Admin
+
+```
+POST   /admin/seed            Seed NeetCode 150 problems for the current user
+                              (idempotent, dev only — 403 in production)
 ```
 
 ---
 
 ## 7. LeetCode Metadata Fetcher
 
-Implement in `apps/api/src/services/leetcode-scraper.ts`.
+Implemented in `apps/api/src/services/leetcode-scraper.ts`.
 
-LeetCode exposes a GraphQL API at `https://leetcode.com/graphql`. Use this query to fetch problem metadata by slug (extracted from the URL):
+Uses the LeetCode GraphQL API at `https://leetcode.com/graphql` with a `getProblem` query (by `titleSlug`). Slug is extracted from the URL. Returns `FetchMetadataResponse`:
 
-```graphql
-query getProblem($titleSlug: String!) {
-  question(titleSlug: $titleSlug) {
-    questionId
-    title
-    titleSlug
-    difficulty
-    topicTags {
-      name
-      slug
-    }
-  }
+```typescript
+interface FetchMetadataResponse {
+  title: string;
+  difficulty: Difficulty;
+  leetcodeId: number;
+  categorySlug: string | null;   // matched category slug, or null
+  rawTags: { name: string; slug: string }[];  // original LeetCode topic tags
 }
 ```
-
-Extract the slug from a URL like `https://leetcode.com/problems/two-sum/` → `two-sum`.
-
-Map `topicTags` to the closest matching category from the categories table. If no match, leave category null and return the raw tags so the user can choose.
 
 ---
 
 ## 8. NeetCode 150 Seed Data
 
-Create a seed file at `packages/db/src/seeds/neetcode150.ts` with all 150 problems. Each entry should include:
-
-```typescript
-type SeedProblem = {
-  leetcodeId: number;
-  title: string;
-  url: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  category: string; // must match a category slug
-};
-```
-
-Source the list from the NeetCode website (https://neetcode.io/roadmap). The seed script should be idempotent — skip problems that already exist by `leetcode_id`.
+Seed file at `packages/db/src/seeds/neetcode150.ts`. Idempotent — skips problems that already exist by `leetcode_id`. Run via `pnpm db:seed` or `POST /admin/seed`.
 
 ---
 
@@ -233,83 +251,94 @@ Source the list from the NeetCode website (https://neetcode.io/roadmap). The see
 /dashboard       → stats + today's review queue
 /problems        → full problem library
 /problems/new    → add problem form
-/problems/:id    → problem detail / edit
+/problems/:id    → problem detail / study notes / edit
 ```
 
 ### 9.2 Dashboard (`/dashboard`)
 
-- **Stats bar** at top: `Due Today: N` | `Completed Today: N`
-- **Review queue**: list of problems due today, sorted by most overdue first
-- Each row shows: title, difficulty badge, category badge, days overdue
+- **Daily Goal Ring**: animated SVG progress ring showing % of due problems reviewed today (green at 100%)
+- **Review queue**: problems due today grouped by category, sorted by most overdue first (never-reviewed shown first)
+- Each row shows: title, difficulty badge, days overdue, link to LeetCode/NeetCode
 - **"Mark as Done"** button on each row — calls `POST /reviews`, optimistically removes from queue
+- Group expand/collapse state persisted in `sessionStorage`
 
 ### 9.3 Problem Library (`/problems`)
 
-- Filter bar: category dropdown, difficulty toggle (All / Easy / Medium / Hard)
-- Table/list of all problems with columns: title, difficulty, category, last reviewed, next review
+- Filter bar: category dropdown, difficulty toggle (All / Easy / Medium / Hard), sort options
+- Table of all problems with columns: title, difficulty, category, NeetCode 150 badge, last reviewed, next review
 - "Add Problem" button → `/problems/new`
 - Click row → `/problems/:id`
+- Delete with undo toast (5-second window)
 
 ### 9.4 Add Problem Form (`/problems/new`)
 
 - **URL field** with "Fetch" button → calls `POST /problems/fetch-metadata`, auto-fills remaining fields
-- Fields: Title, Difficulty, Category (dropdown), Companies (multi-tag input)
+- Fields: Title, Difficulty, Category (dropdown)
 - Submit → `POST /problems`
 
 ### 9.5 Problem Detail (`/problems/:id`)
 
-- Shows all metadata
-- Inline edit mode
-- Schedule info: last reviewed, next review, review count
-- "Mark as Done" button
-- Review history list
+- **Header**: title, difficulty badge, category badge, NeetCode 150 badge, Edit / Delete buttons
+- **Metadata bar**: URL link (LeetCode or NeetCode), LC #, review count, last reviewed, next review
+- **Study notes** (always visible, auto-saved 1.5s after last edit):
+  - Problem Context — brief summary / core constraints
+  - Solution & Code — language selector + code snippet textarea (monospace)
+  - Complexity Analysis — time and space complexity inputs
+  - Personal Notes — key takeaways, edge cases, alternative approaches
+- **Mark as Done** button
+- **Review history**: editable log of all past review events. Each entry shows reviewed-at timestamp, review #, and next-review date. Supports editing the timestamp of any entry (rebuilds entire chain) and deleting entries with an undo toast.
+- Inline metadata edit mode (title, URL, difficulty, category)
 
 ---
 
 ## 10. Shared Types
 
-Define in `packages/shared/src/types.ts`:
+Defined in `packages/shared/src/types.ts`:
 
 ```typescript
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+export interface Category { id: string; name: string; slug: string; }
 
 export interface Problem {
-  id: string;
-  userId: string;
-  leetcodeId?: number;
-  title: string;
-  url: string;
-  difficulty: Difficulty;
-  category?: Category;
-  isNeetcode150: boolean;
+  id: string; userId: string; leetcodeId?: number;
+  title: string; url: string; difficulty: Difficulty;
+  category?: Category; isNeetcode150: boolean;
+  notes?: string; codeSnippet?: string;
+  timeComplexity?: string; spaceComplexity?: string;
+  language?: string; problemSummary?: string;
   createdAt: string;
 }
 
+export interface ProblemWithSchedule extends Problem {
+  schedule?: ProblemSchedule;
+}
+
+export interface DueProblem extends ProblemWithSchedule {
+  daysOverdue: number;
+}
+
 export interface ProblemSchedule {
-  problemId: string;
-  reviewCount: number;
-  lastReviewedAt?: string;
-  nextReviewAt?: string;
+  problemId: string; reviewCount: number;
+  lastReviewedAt?: string; nextReviewAt?: string;
 }
 
 export interface Review {
-  id: string;
-  problemId: string;
-  reviewedAt: string;
-  reviewCount: number;
-  nextReviewAt: string;
+  id: string; problemId: string; reviewedAt: string;
+  reviewCount: number; nextReviewAt: string; confidence?: string;
 }
 
-export interface DashboardStats {
-  dueToday: number;
-  completedToday: number;
+export interface DashboardStats { dueToday: number; completedToday: number; }
+
+export interface CreateProblemBody { /* title, url, difficulty required; rest optional */ }
+export type UpdateProblemBody = Partial<CreateProblemBody>;
+export interface MarkDoneBody { problemId: string; confidence?: string; }
+export interface MarkDoneResponse { nextReviewAt: string; reviewCount: number; }
+export interface EditReviewBody { reviewedAt: string; }
+export interface ReviewScheduleResponse {
+  reviewCount: number; lastReviewedAt: string | null; nextReviewAt: string | null;
 }
+export interface ProblemFilters { category?: string; difficulty?: Difficulty; due?: boolean; }
 ```
 
 ---
@@ -324,6 +353,7 @@ SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=...
 PORT=3001
 NODE_ENV=development
+DEV_USER_ID=<uuid>        # bypasses JWT validation in dev
 ```
 
 ### `apps/web/.env`
@@ -336,12 +366,13 @@ VITE_SUPABASE_ANON_KEY=...
 
 ---
 
-## 12. Auth Notes (MVP Behavior)
+## 12. Auth
 
-- Auth is **wired in but bypassed in MVP** — the API middleware should validate JWTs when present, but for local dev, accept a hardcoded dev user ID via an env var `DEV_USER_ID`
-- Supabase project should be created with RLS enabled on all tables
-- No login/signup UI in MVP — the user is assumed to be authenticated
-- Future: add Supabase Auth UI component, swap dev bypass for real JWT validation
+- Supabase Auth (JWT, email/password)
+- API middleware validates JWT and attaches `req.userId`
+- In local dev: `DEV_USER_ID` env var bypasses JWT validation
+- Supabase RLS enabled on all tables (`user_id = auth.uid()`)
+- No login/signup UI — user is assumed to be authenticated
 
 ---
 
@@ -356,8 +387,9 @@ pnpm dev              # starts both api and web via turbo
 
 # DB
 pnpm db:generate      # drizzle-kit generate
-pnpm db:migrate       # drizzle-kit migrate
-pnpm db:seed          # run seed script
+pnpm db:migrate       # drizzle-kit migrate (use port 5432, not 6543 — pooler doesn't commit DDL)
+pnpm db:seed          # run NeetCode 150 seed script
+pnpm db:dev-user      # provision a dev user row
 
 # Build
 pnpm build
@@ -365,24 +397,26 @@ pnpm build
 
 ---
 
-## 14. MVP Definition of Done
+## 14. Definition of Done
 
-- [ ] Monorepo scaffolded with Turborepo
-- [ ] Drizzle schema created and migrations run against Supabase
-- [ ] NeetCode 150 seed script written and runs idempotently
-- [ ] All API endpoints implemented and tested via curl or Postman
-- [ ] LeetCode metadata fetcher working for a sample URL
-- [ ] React frontend with Dashboard, Problem Library, Add Problem, and Problem Detail views
-- [ ] "Mark as Done" flow updates schedule and removes from queue
-- [ ] Tailwind UI is clean, minimal, functional (not polished)
-- [ ] README with setup instructions
+- [x] Monorepo scaffolded with Turborepo
+- [x] Drizzle schema created and migrations run against Supabase
+- [x] NeetCode 150 seed script written and runs idempotently
+- [x] All API endpoints implemented
+- [x] LeetCode metadata fetcher working (GraphQL scraper)
+- [x] React frontend: Dashboard, Problem Library, Add Problem, Problem Detail
+- [x] "Mark as Done" flow updates schedule and removes from dashboard queue
+- [x] Study notes (problem summary, code snippet, complexity, personal notes) with auto-save
+- [x] Review history log with edit and delete (chain rebuild)
+- [x] Undo toast for problem delete and review delete
+- [x] Dark / light mode toggle
+- [x] Problem sorting in library view
 
 ---
 
-## 15. Out of Scope for MVP
+## 15. Out of Scope
 
 - Login / signup UI
-- Notes or code snippets per problem
 - Streaks, heatmaps, mastery % by category
 - Interview date scheduling
 - Mobile responsiveness polish

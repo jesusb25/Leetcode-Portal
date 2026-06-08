@@ -281,7 +281,7 @@ export function ProblemLibrary() {
                   }}
                 >
                   <div style={{ overflow: "hidden" }}>
-                    <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
+                    <ul className="divide-y divide-stone-400 border-t border-stone-400 dark:divide-gray-600 dark:border-gray-600">
                       {group.problems.map((p) => (
                         <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3">
                           <div className="min-w-0">

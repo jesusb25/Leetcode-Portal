@@ -241,7 +241,7 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-400 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
@@ -350,7 +350,7 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
+                      <ul className="divide-y divide-stone-400 border-t border-stone-400 dark:divide-gray-600 dark:border-gray-600">
                         {group.problems.map((p) => (
                           <li
                             key={p.id}

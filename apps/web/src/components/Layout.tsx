@@ -19,14 +19,17 @@ export function Layout() {
   function toggleSidebar() {
     setSidebarOpen((open) => {
       const next = !open;
-      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "open" : "closed");
+      window.localStorage.setItem(
+        SIDEBAR_STORAGE_KEY,
+        next ? "open" : "closed",
+      );
       return next;
     });
   }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             type="button"
@@ -38,18 +41,29 @@ export function Layout() {
           >
             <MenuIcon />
           </button>
-          <span className="text-lg font-bold text-gray-950 dark:text-gray-100">LeetCode SRS</span>
-          <ThemeToggle isDark={isDark} onToggle={() => setTheme(isDark ? "light" : "dark")} />
+          <a href="/dashboard" className="flex items-center gap-2">
+            <BrainIcon />
+            <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
+              Leetcode Spaced Repetition System
+            </span>
+          </a>
+
+          <ThemeToggle
+            isDark={isDark}
+            onToggle={() => setTheme(isDark ? "light" : "dark")}
+          />
         </div>
       </header>
 
       <div className="flex flex-1">
         <aside
-          className={`shrink-0 overflow-hidden border-r border-gray-200 bg-white transition-all duration-200 dark:border-gray-800 dark:bg-gray-950 ${
+          className={`shrink-0 overflow-hidden border-r border-gray-200 bg-white transition-[width] duration-200 dark:border-gray-800 dark:bg-gray-950 ${
             sidebarOpen ? "w-56" : "w-0 border-r-0"
           }`}
         >
-          <nav className="flex w-56 flex-col gap-1 p-3">
+          <nav
+            className={`flex w-56 flex-col gap-1 p-3 transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+          >
             <NavLink to="/dashboard" className={linkClass}>
               Dashboard
             </NavLink>
@@ -74,7 +88,32 @@ export function Layout() {
 
 function readStoredSidebar(): boolean {
   if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "closed";
+  return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "open";
+}
+
+function BrainIcon() {
+  return (
+    <svg
+      className="h-6 w-6 text-gray-950 dark:text-gray-100"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+      <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+      <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
+      <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
+      <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+      <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+      <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
+      <path d="M6 18a4 4 0 0 1-1.967-.516" />
+      <path d="M19.967 17.484A4 4 0 0 1 18 18" />
+    </svg>
+  );
 }
 
 function MenuIcon() {

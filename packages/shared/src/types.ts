@@ -14,11 +14,9 @@ export interface Problem {
   url: string;
   difficulty: Difficulty;
   category?: Category;
-  companies: string[];
   isNeetcode150: boolean;
   notes?: string;
   codeSnippet?: string;
-  githubUrl?: string;
   timeComplexity?: string;
   spaceComplexity?: string;
   language?: string;
@@ -70,7 +68,6 @@ export interface CreateProblemBody {
   isNeetcode150?: boolean;
   notes?: string;
   codeSnippet?: string;
-  githubUrl?: string;
   timeComplexity?: string;
   spaceComplexity?: string;
   language?: string;

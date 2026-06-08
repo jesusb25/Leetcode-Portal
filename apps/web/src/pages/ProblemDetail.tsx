@@ -284,7 +284,7 @@ export function ProblemDetail() {
     "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-200";
 
   return (
-    <div className="max-w-2xl space-y-5 pb-32">
+    <div className="mx-auto w-3/4 space-y-5 pb-32">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"

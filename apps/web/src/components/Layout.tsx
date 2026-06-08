@@ -29,7 +29,7 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
@@ -56,7 +56,7 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         <aside
           className={`shrink-0 overflow-hidden border-r border-stone-200 bg-white transition-[width] duration-200 dark:border-gray-800 dark:bg-gray-950 ${
             sidebarOpen ? "w-52" : "w-0 border-r-0"
@@ -74,13 +74,13 @@ export function Layout() {
             <NavLink to="/problems/new" className={linkClass}>
               Add Problem
             </NavLink>
-            <div className="mt-auto">
+            <div className="mt-auto border-t border-stone-200 pt-2 dark:border-gray-700">
               <SettingsMenu />
             </div>
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 px-6 py-7">
+        <main className="min-w-0 flex-1 overflow-y-auto px-6 py-7">
           <div className="mx-auto max-w-5xl">
             <Outlet />
           </div>

@@ -5,7 +5,21 @@ import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { rust } from "@codemirror/lang-rust";
 import { EditorView } from "@codemirror/view";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+function useIsDark() {
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isDark;
+}
 
 const lineWrap = EditorView.lineWrapping;
 
@@ -38,13 +52,14 @@ interface CodeEditorProps {
 
 export function CodeEditor({ value, onChange, language, minHeight = "200px" }: CodeEditorProps) {
   const extensions = useMemo(() => getExtensions(language), [language]);
+  const isDark = useIsDark();
 
   return (
     <CodeMirror
       value={value}
       extensions={extensions}
       onChange={onChange}
-      theme="dark"
+      theme={isDark ? "dark" : "light"}
       basicSetup={{
         lineNumbers: true,
         highlightActiveLineGutter: true,

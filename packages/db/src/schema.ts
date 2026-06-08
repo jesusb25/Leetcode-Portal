@@ -39,6 +39,7 @@ export const problems = pgTable(
     isNeetcode150: boolean("is_neetcode_150").default(false),
     notes: text("notes"),
     codeSnippet: text("code_snippet"),
+    githubUrl: text("github_url"),
     timeComplexity: text("time_complexity"),
     spaceComplexity: text("space_complexity"),
     language: text("language"),

@@ -305,8 +305,64 @@ export function ProblemDetail() {
   }
 
   if (!problem) {
+    if (error) {
+      return <p className="text-sm text-red-500 dark:text-red-400">{error}</p>;
+    }
     return (
-      <p className="text-stone-500 dark:text-gray-400">{error ?? "Loading…"}</p>
+      <div className="mx-auto w-3/4 space-y-5 pb-32">
+        {/* nav row */}
+        <div className="flex items-center justify-between">
+          <div className="h-4 w-12 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          <div className="flex items-center gap-1">
+            <div className="h-7 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-4 w-10 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-7 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          </div>
+        </div>
+        {/* title + badges */}
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="h-8 w-64 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="flex gap-2">
+              <div className="h-5 w-16 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
+              <div className="h-5 w-24 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-8 w-14 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-8 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          </div>
+        </div>
+        {/* metadata bar */}
+        <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-white px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          {(["w-20", "w-14", "w-20", "w-28", "w-24"] as const).map((w) => (
+            <div key={w} className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
+          ))}
+        </div>
+        {/* approach + complexity */}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+              <div className="h-6 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            </div>
+            <div className="h-60 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
+          </div>
+          <div className="w-full shrink-0 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900 sm:w-52">
+            <div className="h-3 w-20 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+            <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          </div>
+        </div>
+        {/* personal notes */}
+        <div className="space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          <div className="h-3 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          <div className="h-28 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
+        </div>
+        {/* mark as done */}
+        <div className="h-9 w-28 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+      </div>
     );
   }
 

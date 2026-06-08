@@ -1,6 +1,6 @@
 import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
 import { REVIEW_INTERVALS_DAYS } from "@repo/shared";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
@@ -93,9 +93,15 @@ export function ProblemLibrary() {
   const [problems, setProblems] = useState<ProblemWithSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilters, setCategoryFilters] = useState<Set<string>>(new Set());
+  const [catSearch, setCatSearch] = useState("");
+  const [catOpen, setCatOpen] = useState(false);
+  const [catHighlight, setCatHighlight] = useState(0);
+  const catComboRef = useRef<HTMLDivElement>(null);
+  const catInputRef = useRef<HTMLInputElement>(null);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "All">("All");
   const [statusFilter, setStatusFilter] = useState<ProblemStatus | "All">("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
     try {
       const stored = sessionStorage.getItem("library-open-groups");
@@ -117,13 +123,35 @@ export function ProblemLibrary() {
   }
 
   const hasActiveFilters =
-    categoryFilter !== "" || difficultyFilter !== "All" || statusFilter !== "All";
+    searchQuery !== "" || categoryFilters.size > 0 || difficultyFilter !== "All" || statusFilter !== "All";
 
   function clearFilters() {
-    setCategoryFilter("");
+    setSearchQuery("");
+    setCategoryFilters(new Set());
+    setCatSearch("");
     setDifficultyFilter("All");
     setStatusFilter("All");
   }
+
+  function toggleCategory(slug: string) {
+    setCategoryFilters((prev) => {
+      const next = new Set(prev);
+      next.has(slug) ? next.delete(slug) : next.add(slug);
+      return next;
+    });
+    setCatSearch("");
+    setCatHighlight(0);
+  }
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (catComboRef.current && !catComboRef.current.contains(e.target as Node)) {
+        setCatOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem("problem-back-url", "/problems");
@@ -144,10 +172,15 @@ export function ProblemLibrary() {
     return [...map.values()].sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug));
   }, [problems]);
 
+  const filteredCatOptions = catSearch
+    ? categories.filter((c) => c.name.toLowerCase().includes(catSearch.toLowerCase()))
+    : categories;
+
   const filtered = problems
     .filter((p) => {
+      if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (difficultyFilter !== "All" && p.difficulty !== difficultyFilter) return false;
-      if (categoryFilter && p.category?.slug !== categoryFilter) return false;
+      if (categoryFilters.size > 0 && !categoryFilters.has(p.category?.slug ?? "")) return false;
       if (statusFilter !== "All" && problemStatus(p) !== statusFilter) return false;
       return true;
     })
@@ -158,6 +191,7 @@ export function ProblemLibrary() {
     });
 
   const groups = groupByCategory(filtered);
+  const effectiveOpenGroups = searchQuery ? new Set(groups.map((g) => g.key)) : openGroups;
 
   return (
     <div className="space-y-5">
@@ -171,19 +205,87 @@ export function ProblemLibrary() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="h-9 rounded border border-stone-400 bg-white px-3 text-sm leading-none text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+      <div className="relative">
+        <svg
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400 dark:text-gray-500"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
-          <option value="">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          type="search"
+          placeholder="Search problems…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-9 w-full rounded border border-stone-400 bg-white pl-9 pr-3 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:ring-gray-400 sm:w-72"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div ref={catComboRef} className="relative">
+          <div
+            className="flex h-9 min-w-48 max-w-72 items-center rounded border border-stone-400 bg-white px-2 dark:border-gray-600 dark:bg-gray-900"
+            onClick={() => { setCatOpen(true); catInputRef.current?.focus(); }}
+          >
+            <input
+              ref={catInputRef}
+              value={catSearch}
+              onChange={(e) => { setCatSearch(e.target.value); setCatHighlight(0); setCatOpen(true); }}
+              onFocus={() => setCatOpen(true)}
+              onKeyDown={(e) => {
+                if (!catOpen) return;
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setCatHighlight((i) => Math.min(i + 1, filteredCatOptions.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setCatHighlight((i) => Math.max(i - 1, 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (filteredCatOptions[catHighlight]) toggleCategory(filteredCatOptions[catHighlight].slug);
+                } else if (e.key === "Escape") {
+                  setCatOpen(false);
+                }
+              }}
+              placeholder="Filter categories…"
+              className="h-full w-full bg-transparent text-sm text-stone-700 placeholder-stone-400 focus:outline-none dark:text-gray-100 dark:placeholder-gray-500"
+              autoComplete="off"
+            />
+          </div>
+          {catOpen && (
+            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
+              {filteredCatOptions.length === 0 ? (
+                <li className="px-3 py-2 text-stone-400 dark:text-gray-500">No matches</li>
+              ) : (
+                filteredCatOptions.map((c, i) => {
+                  const selected = categoryFilters.has(c.slug);
+                  return (
+                    <li
+                      key={c.id}
+                      onMouseDown={() => toggleCategory(c.slug)}
+                      onMouseEnter={() => setCatHighlight(i)}
+                      className={`flex cursor-pointer items-center justify-between px-3 py-2 ${
+                        i === catHighlight
+                          ? "bg-stone-100 text-stone-900 dark:bg-gray-700 dark:text-gray-100"
+                          : "text-stone-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {c.name}
+                      {selected && <span className="text-stone-400 dark:text-gray-500">✓</span>}
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-stone-400 dark:text-gray-500">Difficulty:</span>
@@ -224,12 +326,37 @@ export function ProblemLibrary() {
             ))}
           </div>
         </div>
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            title="Clear filters"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
 
       {loading ? (
-        <p className="text-stone-500 dark:text-gray-400">Loading…</p>
+        <div className="space-y-2">
+          {(["w-44", "w-36", "w-52", "w-40", "w-32"] as const).map((w) => (
+            <div
+              key={w}
+              className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+            >
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
+                <div className="h-5 w-8 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : groups.length === 0 ? (
         <div className="rounded-xl border border-dashed border-stone-300 bg-white/50 px-6 py-12 text-center dark:border-gray-600 dark:bg-gray-900/40">
           <p className="text-sm text-stone-500 dark:text-gray-400">
@@ -255,7 +382,7 @@ export function ProblemLibrary() {
       ) : (
         <div className="space-y-2">
           {groups.map((group) => {
-            const isOpen = openGroups.has(group.key);
+            const isOpen = effectiveOpenGroups.has(group.key);
             return (
               <div
                 key={group.key}

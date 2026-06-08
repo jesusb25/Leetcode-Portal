@@ -63,7 +63,6 @@ function toDateTimeLocal(iso?: string) {
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
   const [problem, setProblem] = useState<ProblemWithSchedule | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [sortedIds, setSortedIds] = useState<string[]>([]);
@@ -92,13 +91,10 @@ export function ProblemDetail() {
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [reviewedAtInput, setReviewedAtInput] = useState("");
   const [confirmResetProgress, setConfirmResetProgress] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // --- Undo toast ---
-  const [undoToast, setUndoToast] = useState<
-    | { type: "problem" }
-    | { type: "review"; review: Review }
-    | null
-  >(null);
+  const [undoToast, setUndoToast] = useState<{ type: "review"; review: Review } | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function clearUndoTimer() {
@@ -268,19 +264,14 @@ export function ProblemDetail() {
     }, 5000);
   }
 
-  function startDeleteProblem() {
-    clearUndoTimer();
-    setUndoToast({ type: "problem" });
-    undoTimerRef.current = setTimeout(async () => {
-      setUndoToast(null);
-      if (!id) return;
-      try {
-        await api.deleteProblem(id);
-        navigate("/problems");
-      } catch (e) {
-        setError((e as Error).message);
-      }
-    }, 5000);
+  async function startDeleteProblem() {
+    if (!id) return;
+    try {
+      await api.deleteProblem(id);
+      navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard");
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   function handleUndo() {
@@ -296,6 +287,7 @@ export function ProblemDetail() {
     }
     setUndoToast(null);
   }
+
 
   function markStudyDirty<T>(setter: (v: T) => void) {
     return (v: T) => {
@@ -509,7 +501,7 @@ export function ProblemDetail() {
                 Edit
               </button>
               <button
-                onClick={startDeleteProblem}
+                onClick={() => setConfirmDeleteOpen(true)}
                 className="rounded border border-stone-400 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-gray-800"
               >
                 Delete
@@ -766,17 +758,49 @@ export function ProblemDetail() {
 
       {undoToast && (
         <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-xl bg-stone-900 px-5 py-3 text-sm text-white shadow-xl dark:bg-gray-100 dark:text-gray-900">
-          <span>
-            {undoToast.type === "problem"
-              ? "Problem deleted"
-              : "Review deleted"}
-          </span>
+          <span>Review deleted</span>
           <button
             onClick={handleUndo}
             className="font-semibold underline hover:no-underline"
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {confirmDeleteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60"
+          onClick={() => setConfirmDeleteOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-stone-300 bg-white p-6 shadow-2xl dark:border-gray-600 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">
+              Delete problem?
+            </h2>
+            <p className="mt-2 text-sm text-stone-500 dark:text-gray-400">
+              <span className="font-medium text-stone-800 dark:text-gray-200">{problem.title}</span> will be permanently deleted. This cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="rounded-lg border border-stone-400 px-4 py-2 text-sm text-stone-600 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmDeleteOpen(false);
+                  void startDeleteProblem();
+                }}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

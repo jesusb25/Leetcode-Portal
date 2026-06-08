@@ -55,7 +55,9 @@ export function AddProblem() {
   useEffect(() => {
     api
       .categories()
-      .then((cats) => cats.sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug)))
+      .then((cats) =>
+        cats.sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug)),
+      )
       .then(setCategories)
       .catch(() => setCategories([]));
   }, []);
@@ -71,7 +73,9 @@ export function AddProblem() {
   }, []);
 
   const filteredCategories = categorySearch
-    ? categories.filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+    ? categories.filter((c) =>
+        c.name.toLowerCase().includes(categorySearch.toLowerCase()),
+      )
     : categories;
 
   function selectCategory(cat: Category) {
@@ -85,7 +89,8 @@ export function AddProblem() {
     setCategorySearch("");
   }
 
-  const isFetchableUrl = url.includes("leetcode.com") || url.includes("neetcode.io/problems");
+  const isFetchableUrl =
+    url.includes("leetcode.com") || url.includes("neetcode.io/problems");
 
   async function handleFetch() {
     if (!url) return;
@@ -131,10 +136,14 @@ export function AddProblem() {
 
   return (
     <div className="max-w-xl space-y-5">
-      <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">Add Problem</h1>
+      <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
+        Add Problem
+      </h1>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Problem URL</label>
+        <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+          URL
+        </label>
         <div className="flex gap-2">
           <input
             value={url}
@@ -142,24 +151,26 @@ export function AddProblem() {
             placeholder="https://neetcode.io/problems/two-integer-sum"
             className={inputCls}
           />
-          {isFetchableUrl && (
-            <button
-              type="button"
-              onClick={() => void handleFetch()}
-              disabled={fetching || !url}
-              className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            >
-              {fetching ? "Fetching…" : "Fetch"}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => void handleFetch()}
+            disabled={fetching || !isFetchableUrl}
+            className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          >
+            {fetching ? "Fetching…" : "Fetch"}
+          </button>
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Title</label>
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+            Title
+          </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -169,7 +180,9 @@ export function AddProblem() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Difficulty</label>
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+            Difficulty
+          </label>
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value as Difficulty)}
@@ -184,7 +197,9 @@ export function AddProblem() {
         </div>
 
         <div ref={comboRef} className="relative">
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+            Category
+          </label>
           <div className="relative">
             <input
               value={categorySearch}
@@ -199,13 +214,16 @@ export function AddProblem() {
                 if (!comboOpen) return;
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
-                  setHighlightedIndex((i) => Math.min(i + 1, filteredCategories.length - 1));
+                  setHighlightedIndex((i) =>
+                    Math.min(i + 1, filteredCategories.length - 1),
+                  );
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
                   setHighlightedIndex((i) => Math.max(i - 1, 0));
                 } else if (e.key === "Enter") {
                   e.preventDefault();
-                  if (filteredCategories[highlightedIndex]) selectCategory(filteredCategories[highlightedIndex]);
+                  if (filteredCategories[highlightedIndex])
+                    selectCategory(filteredCategories[highlightedIndex]);
                 } else if (e.key === "Escape") {
                   setComboOpen(false);
                 }
@@ -228,7 +246,9 @@ export function AddProblem() {
           {comboOpen && (
             <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
               {filteredCategories.length === 0 ? (
-                <li className="px-3 py-2 text-stone-400 dark:text-gray-500">No matches</li>
+                <li className="px-3 py-2 text-stone-400 dark:text-gray-500">
+                  No matches
+                </li>
               ) : (
                 filteredCategories.map((c, i) => (
                   <li

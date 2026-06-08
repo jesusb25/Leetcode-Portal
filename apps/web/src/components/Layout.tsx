@@ -16,7 +16,6 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Layout() {
   const { isDark, setTheme } = useThemePreference();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(readStoredSidebar);
-
   function toggleSidebar() {
     setSidebarOpen((open) => {
       const next = !open;
@@ -86,6 +85,7 @@ export function Layout() {
           </div>
         </main>
       </div>
+
     </div>
   );
 }

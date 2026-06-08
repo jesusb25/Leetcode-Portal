@@ -7,6 +7,7 @@ import type {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CategoryBadge } from "../components/CategoryBadge";
+import { CodeEditor } from "../components/CodeEditor";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
@@ -26,7 +27,10 @@ const LANGUAGES = [
 ];
 function formatDate(iso?: string) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString();
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
 }
 
 function toDateTimeLocal(iso?: string) {
@@ -279,7 +283,7 @@ export function ProblemDetail() {
     "text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400";
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-2xl space-y-5 pb-32">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
@@ -376,13 +380,13 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                className="rounded border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
               <button
                 onClick={startDeleteProblem}
-                className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+                className="rounded border border-gray-200 px-3 py-1.5 text-sm text-red-400 hover:bg-gray-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-gray-800"
               >
                 Delete
               </button>
@@ -390,27 +394,32 @@ export function ProblemDetail() {
           </div>
 
           {/* ── Compact metadata bar ── */}
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 rounded border border-gray-900 bg-white px-4 py-3 text-sm dark:border-gray-800 dark:bg-gray-900">
-            <MetaChip label="URL">
-              <a
-                href={questionUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-indigo-600 hover:underline dark:text-indigo-400"
-              >
-                {questionLinkLabel}
-              </a>
-            </MetaChip>
-            <MetaChip label="LC #">{problem.leetcodeId ?? "—"}</MetaChip>
-            <MetaChip label="Reviews">
-              {problem.schedule?.reviewCount ?? 0}
-            </MetaChip>
-            <MetaChip label="Last reviewed">
-              {formatDate(problem.schedule?.lastReviewedAt)}
-            </MetaChip>
-            <MetaChip label="Next review">
-              {formatDate(problem.schedule?.nextReviewAt)}
-            </MetaChip>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded border border-gray-900 bg-white px-4 py-3 text-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+              <MetaChip label="URL">
+                <a
+                  href={questionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  {questionLinkLabel}
+                </a>
+              </MetaChip>
+              <MetaChip label="LC #">{problem.leetcodeId ?? "—"}</MetaChip>
+            </div>
+            <div className="hidden h-5 w-px self-center bg-gray-200 dark:bg-gray-700 sm:block" />
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+              <MetaChip label="Reviews">
+                {problem.schedule?.reviewCount ?? 0}
+              </MetaChip>
+              <MetaChip label="Last reviewed">
+                {formatDate(problem.schedule?.lastReviewedAt)}
+              </MetaChip>
+              <MetaChip label="Next review">
+                {formatDate(problem.schedule?.nextReviewAt)}
+              </MetaChip>
+            </div>
           </div>
 
           {/* ── Problem Context ── */}
@@ -423,7 +432,7 @@ export function ProblemDetail() {
               }
               placeholder="Brief summary or core constraints to reduce context-switching back to LeetCode…"
               rows={3}
-              className={`${inputCls} resize-y`}
+              className={`${inputCls} resize-y px-4 py-3`}
             />
           </div>
 
@@ -452,12 +461,11 @@ export function ProblemDetail() {
               <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
                 Code Snippet
               </label>
-              <textarea
+              <CodeEditor
                 value={codeSnippet}
-                onChange={(e) => markStudyDirty(setCodeSnippet)(e.target.value)}
-                placeholder="Paste your accepted solution here…"
-                rows={10}
-                className={`${inputCls} resize-y font-mono text-xs`}
+                onChange={markStudyDirty(setCodeSnippet)}
+                language={language}
+                minHeight="240px"
               />
             </div>
           </div>
@@ -618,7 +626,7 @@ function MetaChip({
       <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
         {label}
       </span>
-      <span className="text-gray-900 dark:text-gray-100">{children}</span>
+      <span className="font-semibold text-gray-900 dark:text-white">{children}</span>
     </span>
   );
 }

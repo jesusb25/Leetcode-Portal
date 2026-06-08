@@ -96,7 +96,7 @@ export function ProblemLibrary() {
   const [categoryFilters, setCategoryFilters] = useState<Set<string>>(new Set());
   const [catSearch, setCatSearch] = useState("");
   const [catOpen, setCatOpen] = useState(false);
-  const [catHighlight, setCatHighlight] = useState(0);
+  const [catHighlight, setCatHighlight] = useState(-1);
   const catComboRef = useRef<HTMLDivElement>(null);
   const catInputRef = useRef<HTMLInputElement>(null);
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "All">("All");
@@ -139,8 +139,6 @@ export function ProblemLibrary() {
       next.has(slug) ? next.delete(slug) : next.add(slug);
       return next;
     });
-    setCatSearch("");
-    setCatHighlight(0);
   }
 
   useEffect(() => {
@@ -237,7 +235,7 @@ export function ProblemLibrary() {
             <input
               ref={catInputRef}
               value={catSearch}
-              onChange={(e) => { setCatSearch(e.target.value); setCatHighlight(0); setCatOpen(true); }}
+              onChange={(e) => { setCatSearch(e.target.value); setCatHighlight(-1); setCatOpen(true); }}
               onFocus={() => setCatOpen(true)}
               onKeyDown={(e) => {
                 if (!catOpen) return;
@@ -246,15 +244,19 @@ export function ProblemLibrary() {
                   setCatHighlight((i) => Math.min(i + 1, filteredCatOptions.length - 1));
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
-                  setCatHighlight((i) => Math.max(i - 1, 0));
+                  setCatHighlight((i) => (i <= 0 ? 0 : i - 1));
                 } else if (e.key === "Enter") {
                   e.preventDefault();
-                  if (filteredCatOptions[catHighlight]) toggleCategory(filteredCatOptions[catHighlight].slug);
+                  if (catHighlight >= 0 && filteredCatOptions[catHighlight]) toggleCategory(filteredCatOptions[catHighlight].slug);
                 } else if (e.key === "Escape") {
                   setCatOpen(false);
                 }
               }}
-              placeholder="Filter categories…"
+              placeholder={
+                categoryFilters.size > 0
+                  ? `${categoryFilters.size} categor${categoryFilters.size === 1 ? "y" : "ies"} selected`
+                  : "Filter categories…"
+              }
               className="h-full w-full bg-transparent text-sm text-stone-700 placeholder-stone-400 focus:outline-none dark:text-gray-100 dark:placeholder-gray-500"
               autoComplete="off"
             />
@@ -272,7 +274,7 @@ export function ProblemLibrary() {
                       onMouseDown={() => toggleCategory(c.slug)}
                       onMouseEnter={() => setCatHighlight(i)}
                       className={`flex cursor-pointer items-center justify-between px-3 py-2 ${
-                        i === catHighlight
+                        catHighlight >= 0 && i === catHighlight
                           ? "bg-stone-100 text-stone-900 dark:bg-gray-700 dark:text-gray-100"
                           : "text-stone-700 dark:text-gray-300"
                       }`}

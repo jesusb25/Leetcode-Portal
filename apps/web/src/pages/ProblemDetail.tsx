@@ -280,7 +280,7 @@ export function ProblemDetail() {
   const sectionCls =
     "space-y-3 rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900";
   const sectionHeadCls =
-    "text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-gray-500";
+    "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-500";
 
   return (
     <div className="max-w-2xl space-y-5 pb-32">
@@ -371,7 +371,7 @@ export function ProblemDetail() {
                   <CategoryBadge name={problem.category.name} />
                 )}
                 {problem.isNeetcode150 && (
-                  <span className="rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">
+                  <span className="rounded bg-blue-600/10 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">
                     NeetCode 150
                   </span>
                 )}
@@ -380,7 +380,7 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="rounded border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
@@ -609,7 +609,7 @@ function MetaChip({
 }) {
   return (
     <span className="flex items-baseline gap-1">
-      <span className="text-xs uppercase tracking-wide text-stone-400 dark:text-gray-500">
+      <span className="text-xs uppercase tracking-wide text-stone-600 dark:text-gray-500">
         {label}
       </span>
       <span className="font-semibold text-stone-900 dark:text-white">{children}</span>

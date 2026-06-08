@@ -166,7 +166,7 @@ export function Dashboard() {
 
       {!loading && upNext && (
         <section className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-400 dark:text-gray-500">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-900 dark:text-gray-500">
             Up Next
           </p>
           <div className="flex items-center justify-between gap-4">

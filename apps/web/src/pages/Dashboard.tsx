@@ -110,7 +110,7 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-900 dark:text-gray-500">
             Up Next
           </p>
@@ -172,7 +172,7 @@ export function Dashboard() {
       )}
 
       {lastDone && (
-        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-400 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-400 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-800">
           <span className="text-stone-600 dark:text-gray-300">
             Marked{" "}
             <span className="font-medium text-stone-900 dark:text-gray-100">
@@ -224,7 +224,7 @@ export function Dashboard() {
                 placeholder="Search due problems…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-stone-400 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-stone-400 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           )}
@@ -241,7 +241,7 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-100 rounded-xl border border-stone-400 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
@@ -310,7 +310,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="rounded-xl border border-stone-400 bg-white dark:border-gray-800 dark:bg-gray-900"
+                  className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -350,7 +350,7 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-stone-100 border-t border-stone-100 dark:divide-gray-800 dark:border-gray-800">
+                      <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
                         {group.problems.map((p) => (
                           <li
                             key={p.id}

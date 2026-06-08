@@ -179,6 +179,27 @@ reviewsRouter.delete(
 );
 
 /**
+ * DELETE /reviews/:problemId/all — reset a single problem's progress: remove every
+ * review event and its schedule row so the problem returns to never-reviewed.
+ */
+reviewsRouter.delete(
+  "/:problemId/all",
+  asyncHandler(async (req, res) => {
+    const { problemId } = req.params;
+    await assertOwnedProblem(problemId, req.userId);
+
+    await db
+      .delete(reviews)
+      .where(and(eq(reviews.problemId, problemId), eq(reviews.userId, req.userId)));
+    await db
+      .delete(problemSchedule)
+      .where(and(eq(problemSchedule.problemId, problemId), eq(problemSchedule.userId, req.userId)));
+
+    res.status(204).end();
+  }),
+);
+
+/**
  * DELETE /reviews/:problemId/last — undo the most recent "mark as done".
  *
  * Removes the latest review event and re-derives the schedule from the remaining

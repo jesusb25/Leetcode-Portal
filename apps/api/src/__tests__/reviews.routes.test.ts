@@ -43,6 +43,7 @@ function dbResult(result: unknown) {
 
 const select = vi.mocked(db.select);
 const insert = vi.mocked(db.insert);
+const del = vi.mocked(db.delete);
 
 let app: Express;
 
@@ -122,5 +123,27 @@ describe("POST /api/v1/reviews", () => {
     expect(res.status).toBe(201);
     expect(res.body.reviewCount).toBe(1);
     expect(res.body.nextReviewAt).toBe(computeNextReview(0, NOW).toISOString());
+  });
+});
+
+describe("DELETE /api/v1/reviews/:problemId/all", () => {
+  it("wipes the reviews and schedule for an owned problem", async () => {
+    select.mockReturnValueOnce(dbResult([{ id: "problem-1" }]) as never);
+    del.mockReturnValue(dbResult(undefined) as never);
+
+    const res = await request(app).delete("/api/v1/reviews/problem-1/all");
+
+    expect(res.status).toBe(204);
+    // One delete for reviews, one for the schedule row.
+    expect(del).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns 404 when the problem is not owned by the user", async () => {
+    select.mockReturnValueOnce(dbResult([]) as never);
+
+    const res = await request(app).delete("/api/v1/reviews/problem-x/all");
+
+    expect(res.status).toBe(404);
+    expect(del).not.toHaveBeenCalled();
   });
 });

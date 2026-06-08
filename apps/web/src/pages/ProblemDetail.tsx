@@ -12,6 +12,25 @@ import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
 
+const CATEGORY_ORDER = [
+  "arrays-hashing","two-pointers","sliding-window","stack","binary-search",
+  "linked-list","trees","heap-priority-queue","backtracking","tries","graphs",
+  "advanced-graphs","1d-dynamic-programming","2d-dynamic-programming","greedy",
+  "intervals","math-geometry","bit-manipulation",
+];
+const DIFFICULTY_ORDER: Record<Difficulty, number> = { Easy: 0, Medium: 1, Hard: 2 };
+function categoryRank(slug?: string) {
+  const i = slug ? CATEGORY_ORDER.indexOf(slug) : -1;
+  return i === -1 ? CATEGORY_ORDER.length + 1 : i;
+}
+function sortedProblemsOrder(problems: ProblemWithSchedule[]): ProblemWithSchedule[] {
+  return [...problems].sort((a, b) => {
+    const byCategory = categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
+    if (byCategory !== 0) return byCategory;
+    return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+  });
+}
+
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 const LANGUAGES = [
   "Plain Text",
@@ -47,6 +66,7 @@ export function ProblemDetail() {
 
   const [problem, setProblem] = useState<ProblemWithSchedule | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [sortedIds, setSortedIds] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +82,7 @@ export function ProblemDetail() {
   const [language, setLanguage] = useState("Plain Text");
   const [timeComplexity, setTimeComplexity] = useState("");
   const [spaceComplexity, setSpaceComplexity] = useState("");
+  const [confidence, setConfidence] = useState("");
   const [notes, setNotes] = useState("");
   const [studyDirty, setStudyDirty] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,6 +130,7 @@ export function ProblemDetail() {
       setLanguage(p.language ?? "Plain Text");
       setTimeComplexity(p.timeComplexity ?? "");
       setSpaceComplexity(p.spaceComplexity ?? "");
+      setConfidence(p.confidence ?? "");
       setNotes(p.notes ?? "");
       setStudyDirty(false);
       await loadReviews(id);
@@ -121,8 +143,12 @@ export function ProblemDetail() {
     void load();
     api
       .categories()
-      .then(setCategories)
+      .then((cats) => setCategories([...cats].sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug))))
       .catch(() => setCategories([]));
+    api
+      .listProblems()
+      .then((all) => setSortedIds(sortedProblemsOrder(all).map((p) => p.id)))
+      .catch(() => setSortedIds([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -155,6 +181,7 @@ export function ProblemDetail() {
         language: language || undefined,
         timeComplexity: timeComplexity || undefined,
         spaceComplexity: spaceComplexity || undefined,
+        confidence: confidence || undefined,
         notes: notes || undefined,
       });
       setProblem(updated);
@@ -172,7 +199,7 @@ export function ProblemDetail() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studyDirty, problemSummary, codeSnippet, language, timeComplexity, spaceComplexity, notes]);
+  }, [studyDirty, problemSummary, codeSnippet, language, timeComplexity, spaceComplexity, confidence, notes]);
 
   async function markDone() {
     if (!id) return;
@@ -289,6 +316,10 @@ export function ProblemDetail() {
     : "Open ↗";
   const hasReviews = (problem.schedule?.reviewCount ?? 0) > 0;
 
+  const currentIdx = id ? sortedIds.indexOf(id) : -1;
+  const prevId = currentIdx > 0 ? sortedIds[currentIdx - 1] : null;
+  const nextId = currentIdx !== -1 && currentIdx < sortedIds.length - 1 ? sortedIds[currentIdx + 1] : null;
+
   const inputCls =
     "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
   const sectionCls =
@@ -298,12 +329,35 @@ export function ProblemDetail() {
 
   return (
     <div className="mx-auto w-3/4 space-y-5 pb-32">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
-      >
-        ← Back
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard")}
+          className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
+        >
+          ← Back
+        </button>
+        {sortedIds.length > 0 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => prevId && navigate(`/problems/${prevId}`)}
+              disabled={!prevId}
+              className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs text-stone-400 dark:text-gray-500">
+              {currentIdx + 1} / {sortedIds.length}
+            </span>
+            <button
+              onClick={() => nextId && navigate(`/problems/${nextId}`)}
+              disabled={!nextId}
+              className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Next →
+            </button>
+          </div>
+        )}
+      </div>
 
       {error && (
         <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
@@ -469,27 +523,66 @@ export function ProblemDetail() {
                 <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Time
                 </label>
-                <input
+                <textarea
                   value={timeComplexity}
-                  onChange={(e) =>
-                    markStudyDirty(setTimeComplexity)(e.target.value)
-                  }
+                  onChange={(e) => {
+                    e.target.style.height = "auto";
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                    markStudyDirty(setTimeComplexity)(e.target.value);
+                  }}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = "auto";
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
                   placeholder="O(N)"
-                  className={inputCls}
+                  rows={1}
+                  className={`${inputCls} resize-none overflow-hidden`}
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Space
                 </label>
-                <input
+                <textarea
                   value={spaceComplexity}
-                  onChange={(e) =>
-                    markStudyDirty(setSpaceComplexity)(e.target.value)
-                  }
+                  onChange={(e) => {
+                    e.target.style.height = "auto";
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                    markStudyDirty(setSpaceComplexity)(e.target.value);
+                  }}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = "auto";
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
                   placeholder="O(1)"
-                  className={inputCls}
+                  rows={1}
+                  className={`${inputCls} resize-none overflow-hidden`}
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                  Confidence
+                </label>
+                <select
+                  value={confidence}
+                  onChange={(e) => markStudyDirty(setConfidence)(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">—</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Mastered">Mastered</option>
+                </select>
+                {confidence === "Mastered" && (
+                  <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                    Won't appear in review queue
+                  </p>
+                )}
               </div>
             </div>
           </div>

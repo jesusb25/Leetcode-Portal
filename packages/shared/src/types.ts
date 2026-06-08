@@ -17,12 +17,11 @@ export interface Problem {
   isNeetcode150: boolean;
   notes?: string;
   codeSnippet?: string;
-  githubUrl?: string;
   timeComplexity?: string;
   spaceComplexity?: string;
   language?: string;
   problemSummary?: string;
-  createdAt: string;
+  confidence?: string;
 }
 
 export interface ProblemSchedule {
@@ -69,11 +68,11 @@ export interface CreateProblemBody {
   isNeetcode150?: boolean;
   notes?: string;
   codeSnippet?: string;
-  githubUrl?: string;
   timeComplexity?: string;
   spaceComplexity?: string;
   language?: string;
   problemSummary?: string;
+  confidence?: string;
 }
 
 export type UpdateProblemBody = Partial<CreateProblemBody>;

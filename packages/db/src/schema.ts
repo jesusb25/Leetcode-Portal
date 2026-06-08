@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+
 /**
  * Schema for the LeetCode spaced-repetition system (spec §4).
  *
@@ -23,7 +24,6 @@ export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const problems = pgTable(
@@ -39,12 +39,11 @@ export const problems = pgTable(
     isNeetcode150: boolean("is_neetcode_150").default(false),
     notes: text("notes"),
     codeSnippet: text("code_snippet"),
-    githubUrl: text("github_url"),
     timeComplexity: text("time_complexity"),
     spaceComplexity: text("space_complexity"),
     language: text("language"),
     problemSummary: text("problem_summary"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    confidence: text("confidence"),
   },
   (table) => ({
     difficultyCheck: check(
@@ -76,7 +75,6 @@ export const problemSchedule = pgTable("problem_schedule", {
   reviewCount: integer("review_count").default(0),
   lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
   nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export type CategoryRow = typeof categories.$inferSelect;

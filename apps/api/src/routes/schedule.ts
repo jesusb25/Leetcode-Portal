@@ -1,5 +1,5 @@
 import type { DashboardStats, DueProblem } from "@repo/shared";
-import { and, eq, gte, isNull, lte, or } from "drizzle-orm";
+import { and, eq, gte, isNull, lte, ne, or } from "drizzle-orm";
 import { Router } from "express";
 import { categories, db, problems, problemSchedule, reviews } from "../db.js";
 import { asyncHandler } from "../middleware/error.js";
@@ -18,13 +18,18 @@ scheduleRouter.get(
     const now = new Date();
 
     const rows = await db
-      .select({ problem: problems, category: categories, schedule: problemSchedule })
+      .select({
+        problem: problems,
+        category: categories,
+        schedule: problemSchedule,
+      })
       .from(problems)
       .leftJoin(categories, eq(problems.categoryId, categories.id))
       .leftJoin(problemSchedule, eq(problemSchedule.problemId, problems.id))
       .where(
         and(
           eq(problems.userId, req.userId),
+          or(isNull(problems.confidence), ne(problems.confidence, "Mastered")),
           or(
             isNull(problemSchedule.nextReviewAt),
             lte(problemSchedule.nextReviewAt, now),
@@ -33,7 +38,11 @@ scheduleRouter.get(
       );
 
     const due: DueProblem[] = rows.map((r) => {
-      const base = serializeProblemWithSchedule(r.problem, r.category, r.schedule);
+      const base = serializeProblemWithSchedule(
+        r.problem,
+        r.category,
+        r.schedule,
+      );
       const next = r.schedule?.nextReviewAt;
       const daysOverdue = next
         ? Math.max(0, Math.floor((now.getTime() - next.getTime()) / 86400000))
@@ -69,6 +78,7 @@ scheduleRouter.get(
       .where(
         and(
           eq(problems.userId, req.userId),
+          or(isNull(problems.confidence), ne(problems.confidence, "Mastered")),
           or(
             isNull(problemSchedule.nextReviewAt),
             lte(problemSchedule.nextReviewAt, now),
@@ -79,7 +89,12 @@ scheduleRouter.get(
     const completedRows = await db
       .select({ id: reviews.id })
       .from(reviews)
-      .where(and(eq(reviews.userId, req.userId), gte(reviews.reviewedAt, startOfDay)));
+      .where(
+        and(
+          eq(reviews.userId, req.userId),
+          gte(reviews.reviewedAt, startOfDay),
+        ),
+      );
 
     const stats: DashboardStats = {
       dueToday: dueRows.length,

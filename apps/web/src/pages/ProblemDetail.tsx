@@ -14,6 +14,7 @@ import { getProblemQuestionUrl } from "../lib/neetcode";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 const LANGUAGES = [
+  "Plain Text",
   "Python",
   "JavaScript",
   "TypeScript",
@@ -58,7 +59,7 @@ export function ProblemDetail() {
   // --- Study notes fields (always visible, saved separately) ---
   const [problemSummary, setProblemSummary] = useState("");
   const [codeSnippet, setCodeSnippet] = useState("");
-  const [language, setLanguage] = useState("Python");
+  const [language, setLanguage] = useState("Plain Text");
   const [timeComplexity, setTimeComplexity] = useState("");
   const [spaceComplexity, setSpaceComplexity] = useState("");
   const [notes, setNotes] = useState("");
@@ -104,7 +105,7 @@ export function ProblemDetail() {
       setUrl(p.url);
       setProblemSummary(p.problemSummary ?? "");
       setCodeSnippet(p.codeSnippet ?? "");
-      setLanguage("Python");
+      setLanguage(p.language ?? "Plain Text");
       setTimeComplexity(p.timeComplexity ?? "");
       setSpaceComplexity(p.spaceComplexity ?? "");
       setNotes(p.notes ?? "");
@@ -422,18 +423,16 @@ export function ProblemDetail() {
             </div>
           </div>
 
-          {/* ── Solution & Code ── */}
-          <div className={sectionCls}>
-            <p className={sectionHeadCls}>Solution & Code</p>
-            <div className="flex gap-3">
-              <div className="w-40 shrink-0">
-                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
-                  Language
-                </label>
+          {/* ── Approach + Complexity ── */}
+          <div className="flex flex-col gap-4 sm:flex-row">
+            {/* Approach (code / notes) on the left */}
+            <div className={`${sectionCls} min-w-0 flex-1`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className={sectionHeadCls}>Approach</p>
                 <select
                   value={language}
                   onChange={(e) => markStudyDirty(setLanguage)(e.target.value)}
-                  className={inputCls}
+                  className="rounded-lg border border-stone-200 px-2 py-1 text-xs text-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                 >
                   {LANGUAGES.map((l) => (
                     <option key={l} value={l}>
@@ -442,11 +441,6 @@ export function ProblemDetail() {
                   ))}
                 </select>
               </div>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
-                Code Snippet
-              </label>
               <CodeEditor
                 value={codeSnippet}
                 onChange={markStudyDirty(setCodeSnippet)}
@@ -454,13 +448,11 @@ export function ProblemDetail() {
                 minHeight="240px"
               />
             </div>
-          </div>
 
-          {/* ── Complexity Analysis ── */}
-          <div className={sectionCls}>
-            <p className={sectionHeadCls}>Complexity Analysis</p>
-            <div className="flex gap-4">
-              <div className="flex-1">
+            {/* Complexity box on the right */}
+            <div className={`${sectionCls} w-full shrink-0 sm:w-52`}>
+              <p className={sectionHeadCls}>Complexity</p>
+              <div>
                 <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Time
                 </label>
@@ -473,7 +465,7 @@ export function ProblemDetail() {
                   className={inputCls}
                 />
               </div>
-              <div className="flex-1">
+              <div>
                 <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Space
                 </label>

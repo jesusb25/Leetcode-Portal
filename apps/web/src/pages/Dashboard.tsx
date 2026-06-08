@@ -5,65 +5,14 @@ import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
 
-const RING_R = 36;
-const RING_CIRC = 2 * Math.PI * RING_R;
-
-function DailyGoalRing({ done, total }: { done: number; total: number }) {
-  const pct = total === 0 ? 100 : Math.round((done / total) * 100);
-  const offset = RING_CIRC * (1 - pct / 100);
-  const allClear = pct === 100;
-
-  return (
-    <div className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <svg
-        width="80"
-        height="80"
-        viewBox="0 0 80 80"
-        className="shrink-0 -rotate-90"
-      >
-        <defs>
-          <filter id="ring-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <circle
-          cx="40"
-          cy="40"
-          r={RING_R}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="7"
-          className="text-stone-100 dark:text-gray-800"
-        />
-        <circle
-          cx="40"
-          cy="40"
-          r={RING_R}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeDasharray={RING_CIRC}
-          strokeDashoffset={offset}
-          filter="url(#ring-glow)"
-          className={allClear ? "text-emerald-500" : "text-indigo-500"}
-          style={{ transition: "stroke-dashoffset 0.4s ease" }}
-        />
-      </svg>
-    </div>
-  );
-}
-
 export function Dashboard() {
   const [queue, setQueue] = useState<DueProblem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastDone, setLastDone] = useState<DueProblem | null>(null);
-  const [initialTotal, setInitialTotal] = useState(0);
+  // Total problems on today's plate (already done + still due), captured at load
+  // so the progress bar fills as the queue drains via optimistic updates.
+  const [dayTotal, setDayTotal] = useState(0);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
     try {
       const stored = sessionStorage.getItem("dashboard-open-groups");
@@ -87,13 +36,13 @@ export function Dashboard() {
     });
   }
 
-  async function load(isInitial = false) {
+  async function load() {
     setLoading(true);
     setError(null);
     try {
-      const q = await api.due();
+      const [q, stats] = await Promise.all([api.due(), api.stats()]);
       setQueue(q);
-      if (isInitial) setInitialTotal(q.length);
+      setDayTotal(stats.completedToday + q.length);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -102,7 +51,7 @@ export function Dashboard() {
   }
 
   useEffect(() => {
-    void load(true);
+    void load();
   }, []);
 
   // Auto-dismiss the undo toast after a few seconds.
@@ -143,22 +92,18 @@ export function Dashboard() {
   const groups = groupByCategory(queue);
   const upNext = groups[0]?.problems[0] ?? null;
 
+  const progress = dayTotal > 0 ? (dayTotal - queue.length) / dayTotal : 0;
+
   const needle = search.trim().toLowerCase();
   const searchResults = needle
     ? queue.filter((p) => p.title.toLowerCase().includes(needle))
     : null;
-
-  const done = Math.max(0, initialTotal - queue.length);
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
         Dashboard
       </h1>
-
-      {!loading && initialTotal > 0 && (
-        <DailyGoalRing done={done} total={initialTotal} />
-      )}
 
       {error && (
         <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
@@ -468,6 +413,30 @@ export function Dashboard() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+/**
+ * Slim review-progress bar that fills left-to-right as work is completed.
+ * Colors are inverted between themes: dark fill on a light track in light mode,
+ * light fill on a dark track in dark mode.
+ */
+function ProgressBar({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(1, value)) * 100;
+  return (
+    <div
+      role="progressbar"
+      aria-label="Review progress"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(pct)}
+      className="h-2 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-gray-800"
+    >
+      <div
+        className="h-full rounded-full bg-stone-900 transition-[width] duration-500 ease-out dark:bg-gray-100"
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../lib/api", () => ({
   api: {
     due: vi.fn(),
+    stats: vi.fn(),
     markDone: vi.fn(),
     undoLastReview: vi.fn(),
   },
@@ -16,6 +17,7 @@ import { api } from "../lib/api";
 import { Dashboard } from "../pages/Dashboard";
 
 const due = vi.mocked(api.due);
+const stats = vi.mocked(api.stats);
 const markDone = vi.mocked(api.markDone);
 
 const dueProblem: DueProblem = {
@@ -39,6 +41,7 @@ function renderDashboard() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  stats.mockResolvedValue({ dueToday: 0, completedToday: 0 });
 });
 
 afterEach(() => {
@@ -54,13 +57,16 @@ describe("Dashboard", () => {
     expect(await screen.findByText("Nothing due. Nice work! 🎉")).toBeInTheDocument();
   });
 
-  it("shows the due count and queued problem", async () => {
+  it("shows the queued problem and an empty progress bar", async () => {
     due.mockResolvedValue([dueProblem]);
+    stats.mockResolvedValue({ dueToday: 1, completedToday: 0 });
 
     renderDashboard();
 
     expect((await screen.findAllByText("Two Sum")).length).toBeGreaterThan(0);
-    expect(screen.getByText(/0 of 1 reviewed/)).toBeInTheDocument();
+    // Nothing reviewed yet → bar sits at 0%.
+    const bar = screen.getByRole("progressbar", { name: "Review progress" });
+    expect(bar).toHaveAttribute("aria-valuenow", "0");
   });
 
   it("calls the API when 'Mark as Done' is clicked", async () => {

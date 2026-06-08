@@ -110,7 +110,7 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-900 dark:text-gray-500">
             Up Next
           </p>
@@ -172,7 +172,7 @@ export function Dashboard() {
       )}
 
       {lastDone && (
-        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-400 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <span className="text-stone-600 dark:text-gray-300">
             Marked{" "}
             <span className="font-medium text-stone-900 dark:text-gray-100">
@@ -199,12 +199,13 @@ export function Dashboard() {
       )}
 
       <section>
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">
+        <div className="mb-3 flex items-center gap-4">
+          <h2 className="shrink-0 text-lg font-semibold text-stone-900 dark:text-gray-100">
             Review Queue
           </h2>
+          <ProgressBar value={progress} className="w-1/3" />
           {!loading && queue.length > 0 && (
-            <div className="relative w-64">
+            <div className="relative ml-auto w-64">
               <svg
                 className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
                 viewBox="0 0 24 24"
@@ -223,7 +224,7 @@ export function Dashboard() {
                 placeholder="Search due problems…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-stone-200 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-stone-400 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           )}
@@ -240,7 +241,7 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-100 rounded-xl border border-stone-400 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
@@ -309,7 +310,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="rounded-xl border border-stone-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+                  className="rounded-xl border border-stone-400 bg-white dark:border-gray-800 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -422,7 +423,13 @@ export function Dashboard() {
  * Colors are inverted between themes: dark fill on a light track in light mode,
  * light fill on a dark track in dark mode.
  */
-function ProgressBar({ value }: { value: number }) {
+function ProgressBar({
+  value,
+  className = "",
+}: {
+  value: number;
+  className?: string;
+}) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
   return (
     <div
@@ -431,7 +438,7 @@ function ProgressBar({ value }: { value: number }) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
-      className="h-2 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-gray-800"
+      className={`h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-gray-800 ${className}`}
     >
       <div
         className="h-full rounded-full bg-stone-900 transition-[width] duration-500 ease-out dark:bg-gray-100"

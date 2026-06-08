@@ -156,9 +156,7 @@ const NEETCODE_150_SLUGS: Record<number, string> = {
 export function getProblemQuestionUrl(problem: Pick<Problem, "leetcodeId" | "url">) {
   const storedNeetcodeSlug = extractNeetcodeProblemSlug(problem.url);
   if (storedNeetcodeSlug) return buildNeetcodeQuestionUrl(storedNeetcodeSlug);
-
-  const mappedSlug = problem.leetcodeId ? NEETCODE_150_SLUGS[problem.leetcodeId] : undefined;
-  return mappedSlug ? buildNeetcodeQuestionUrl(mappedSlug) : problem.url;
+  return problem.url;
 }
 
 function buildNeetcodeQuestionUrl(slug: string) {

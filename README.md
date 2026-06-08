@@ -8,13 +8,13 @@ Single-user today, architected for multi-user from day one (every table carries 
 
 ## Tech stack
 
-| Layer    | Tech                                            |
-| -------- | ----------------------------------------------- |
-| Frontend | React + Vite + TypeScript + Tailwind CSS        |
-| Backend  | Node.js + Express + TypeScript                  |
-| Database | PostgreSQL (Supabase) + Drizzle ORM             |
-| Auth     | Supabase Auth (wired in, bypassed in dev)       |
-| Monorepo | Turborepo + pnpm                                |
+| Layer    | Tech                                      |
+| -------- | ----------------------------------------- |
+| Frontend | React + Vite + TypeScript + Tailwind CSS  |
+| Backend  | Node.js + Express + TypeScript            |
+| Database | PostgreSQL (Supabase) + Drizzle ORM       |
+| Auth     | Supabase Auth (wired in, bypassed in dev) |
+| Monorepo | Turborepo + pnpm                          |
 
 ## Structure
 
@@ -33,7 +33,7 @@ both the API and the frontend.
 ## Features
 
 **Dashboard**
-- Daily goal progress ring — tracks how many due problems you've knocked out this session
+
 - "Up Next" card — highlights the most overdue problem at the top
 - Review queue grouped by NeetCode category (Arrays & Hashing, Two Pointers, etc.), sorted by difficulty within each group
 - Collapsible category groups with animated expand/collapse; open state persists across navigation via `sessionStorage`
@@ -41,11 +41,13 @@ both the API and the frontend.
 - Optimistic "Mark as Done" with a 5-second undo toast
 
 **Problem Library**
+
 - Full list of all your problems, grouped by NeetCode category
 - Filter by category (dropdown) and difficulty (Easy / Medium / Hard toggle buttons)
 - Collapsible groups; shows last reviewed and next review dates per problem
 
 **Problem Detail**
+
 - Inline metadata editing (title, URL, difficulty, category)
 - Study notes panel — auto-saves 1.5 seconds after you stop typing:
   - Problem context (summary / constraints)
@@ -57,11 +59,13 @@ both the API and the frontend.
 - Soft delete for the problem itself — 5-second undo before the server call fires
 
 **Adding problems**
+
 - Paste a LeetCode URL → click Fetch to auto-populate title, difficulty, LeetCode ID, and category
 - NeetCode URLs can be added manually (no scraping needed)
 - Category assigned at creation time or edited later
 
 **Navigation**
+
 - Collapsible sidebar (Dashboard / Problems / Add Problem); open/closed state persists in `localStorage`
 - Dark / light mode — defaults to system preference, toggle button in the header
 
@@ -107,22 +111,22 @@ UI and removing the dev bypass — the validation path already exists.
 
 Base path `/api/v1` (all routes require auth, dev-bypassed as above):
 
-| Method | Path                                  | Purpose                                        |
-| ------ | ------------------------------------- | ---------------------------------------------- |
-| GET    | `/problems`                           | List (filters: `category`, `difficulty`, `due`) |
-| GET    | `/problems/:id`                       | One problem + schedule state                   |
-| POST   | `/problems`                           | Create                                         |
-| PUT    | `/problems/:id`                       | Update metadata + study notes                  |
-| DELETE | `/problems/:id`                       | Delete                                         |
-| POST   | `/problems/fetch-metadata`            | Scrape a LeetCode URL                          |
-| POST   | `/reviews`                            | Mark done; runs scheduler                      |
-| DELETE | `/reviews/:problemId/last`            | Undo the most recent review                    |
-| GET    | `/reviews/:problemId/log`             | Full review history, most recent first         |
-| PATCH  | `/reviews/:problemId/log/:reviewId`   | Edit an arbitrary past review's timestamp      |
-| DELETE | `/reviews/:problemId/log/:reviewId`   | Delete an arbitrary past review                |
-| GET    | `/schedule/due`                       | Due queue, most overdue first                  |
-| GET    | `/schedule/stats`                     | `{ dueToday, completedToday }`                 |
-| POST   | `/admin/seed`                         | Seed NeetCode 150 (dev only)                   |
+| Method | Path                                | Purpose                                         |
+| ------ | ----------------------------------- | ----------------------------------------------- |
+| GET    | `/problems`                         | List (filters: `category`, `difficulty`, `due`) |
+| GET    | `/problems/:id`                     | One problem + schedule state                    |
+| POST   | `/problems`                         | Create                                          |
+| PUT    | `/problems/:id`                     | Update metadata + study notes                   |
+| DELETE | `/problems/:id`                     | Delete                                          |
+| POST   | `/problems/fetch-metadata`          | Scrape a LeetCode URL                           |
+| POST   | `/reviews`                          | Mark done; runs scheduler                       |
+| DELETE | `/reviews/:problemId/last`          | Undo the most recent review                     |
+| GET    | `/reviews/:problemId/log`           | Full review history, most recent first          |
+| PATCH  | `/reviews/:problemId/log/:reviewId` | Edit an arbitrary past review's timestamp       |
+| DELETE | `/reviews/:problemId/log/:reviewId` | Delete an arbitrary past review                 |
+| GET    | `/schedule/due`                     | Due queue, most overdue first                   |
+| GET    | `/schedule/stats`                   | `{ dueToday, completedToday }`                  |
+| POST   | `/admin/seed`                       | Seed NeetCode 150 (dev only)                    |
 
 Quick smoke test once the API is running:
 

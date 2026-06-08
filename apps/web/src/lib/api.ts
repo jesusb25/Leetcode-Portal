@@ -103,6 +103,9 @@ export const api = {
   deleteReview(problemId: string, reviewId: string): Promise<ReviewScheduleResponse> {
     return request(`/reviews/${problemId}/log/${reviewId}`, { method: "DELETE" });
   },
+  resetProgress(): Promise<void> {
+    return request("/reviews/reset", { method: "DELETE" });
+  },
 
   // Schedule / dashboard
   due(): Promise<DueProblem[]> {

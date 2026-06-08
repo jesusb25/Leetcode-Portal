@@ -265,7 +265,7 @@ export function ProblemDetail() {
 
   if (!problem) {
     return (
-      <p className="text-gray-500 dark:text-gray-400">{error ?? "Loading…"}</p>
+      <p className="text-stone-500 dark:text-gray-400">{error ?? "Loading…"}</p>
     );
   }
 
@@ -276,31 +276,31 @@ export function ProblemDetail() {
   const hasReviews = (problem.schedule?.reviewCount ?? 0) > 0;
 
   const inputCls =
-    "w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
+    "w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
   const sectionCls =
-    "space-y-3 rounded border border-gray-900 bg-white p-4 dark:border-gray-800 dark:bg-gray-900";
+    "space-y-3 rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900";
   const sectionHeadCls =
-    "text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400";
+    "text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-gray-500";
 
   return (
     <div className="max-w-2xl space-y-5 pb-32">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+        className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
       >
         ← Back
       </button>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
       )}
 
       {editing ? (
         /* ── Metadata edit form ── */
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">Edit Problem</h1>
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">Edit Problem</h1>
           <div>
-            <label className="mb-1 block text-sm font-medium">Title</label>
+            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Title</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -308,7 +308,7 @@ export function ProblemDetail() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">URL</label>
+            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">URL</label>
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -316,7 +316,7 @@ export function ProblemDetail() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Difficulty</label>
+            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Difficulty</label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
@@ -330,7 +330,7 @@ export function ProblemDetail() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Category</label>
+            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -347,13 +347,13 @@ export function ProblemDetail() {
           <div className="flex gap-2">
             <button
               onClick={() => void saveMeta()}
-              className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+              className="rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
             >
               Save
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+              className="rounded border border-stone-200 px-4 py-2 text-sm text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -364,14 +364,14 @@ export function ProblemDetail() {
           {/* ── Header ── */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-bold">{problem.title}</h1>
+              <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">{problem.title}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <DifficultyBadge difficulty={problem.difficulty} />
                 {problem.category && (
                   <CategoryBadge name={problem.category.name} />
                 )}
                 {problem.isNeetcode150 && (
-                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+                  <span className="rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600 dark:bg-blue-900/40 dark:text-blue-200">
                     NeetCode 150
                   </span>
                 )}
@@ -380,13 +380,13 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="rounded border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
               <button
                 onClick={startDeleteProblem}
-                className="rounded border border-gray-200 px-3 py-1.5 text-sm text-red-400 hover:bg-gray-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-gray-800"
+                className="rounded border border-stone-200 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-gray-800"
               >
                 Delete
               </button>
@@ -394,7 +394,7 @@ export function ProblemDetail() {
           </div>
 
           {/* ── Compact metadata bar ── */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded border border-gray-900 bg-white px-4 py-3 text-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex flex-wrap gap-x-5 gap-y-1.5">
               <MetaChip label="URL">
                 <a
@@ -408,7 +408,7 @@ export function ProblemDetail() {
               </MetaChip>
               <MetaChip label="LC #">{problem.leetcodeId ?? "—"}</MetaChip>
             </div>
-            <div className="hidden h-5 w-px self-center bg-gray-200 dark:bg-gray-700 sm:block" />
+            <div className="hidden h-5 w-px self-center bg-stone-200 dark:bg-gray-700 sm:block" />
             <div className="flex flex-wrap gap-x-5 gap-y-1.5">
               <MetaChip label="Reviews">
                 {problem.schedule?.reviewCount ?? 0}
@@ -422,26 +422,12 @@ export function ProblemDetail() {
             </div>
           </div>
 
-          {/* ── Problem Context ── */}
-          <div className={sectionCls}>
-            <p className={sectionHeadCls}>Problem Context</p>
-            <textarea
-              value={problemSummary}
-              onChange={(e) =>
-                markStudyDirty(setProblemSummary)(e.target.value)
-              }
-              placeholder="Brief summary or core constraints to reduce context-switching back to LeetCode…"
-              rows={3}
-              className={`${inputCls} resize-y px-4 py-3`}
-            />
-          </div>
-
           {/* ── Solution & Code ── */}
           <div className={sectionCls}>
             <p className={sectionHeadCls}>Solution & Code</p>
             <div className="flex gap-3">
               <div className="w-40 shrink-0">
-                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Language
                 </label>
                 <select
@@ -458,7 +444,7 @@ export function ProblemDetail() {
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+              <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                 Code Snippet
               </label>
               <CodeEditor
@@ -475,7 +461,7 @@ export function ProblemDetail() {
             <p className={sectionHeadCls}>Complexity Analysis</p>
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Time
                 </label>
                 <input
@@ -488,7 +474,7 @@ export function ProblemDetail() {
                 />
               </div>
               <div className="flex-1">
-                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Space
                 </label>
                 <input
@@ -519,7 +505,7 @@ export function ProblemDetail() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => void markDone()}
-              className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+              className="rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
             >
               Mark as Done
             </button>
@@ -527,17 +513,17 @@ export function ProblemDetail() {
 
           {/* ── Review History ── */}
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">Review history</h2>
+            <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">Review history</h2>
             {!hasReviews ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-stone-500 dark:text-gray-400">
                 Not reviewed yet. Click "Mark as Done" to log your first review.
               </p>
             ) : (
-              <ul className="divide-y divide-gray-900 rounded border border-gray-900 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+              <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
                 {reviewLog.map((r) => (
                   <li
                     key={r.id}
-                    className="flex flex-wrap items-center justify-between gap-3 p-3"
+                    className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                   >
                     {editingReviewId === r.id ? (
                       <div className="flex flex-wrap items-center gap-2">
@@ -545,17 +531,17 @@ export function ProblemDetail() {
                           type="datetime-local"
                           value={reviewedAtInput}
                           onChange={(e) => setReviewedAtInput(e.target.value)}
-                          className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                          className="rounded-lg border border-stone-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                         />
                         <button
                           onClick={() => void saveReviewEdit()}
-                          className="rounded bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                          className="rounded bg-stone-900 px-2 py-1 text-xs font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => setEditingReviewId(null)}
-                          className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                          className="rounded border border-stone-200 px-2 py-1 text-xs text-stone-600 transition hover:bg-stone-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                         >
                           Cancel
                         </button>
@@ -563,10 +549,10 @@ export function ProblemDetail() {
                     ) : (
                       <>
                         <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                          <span className="font-medium text-stone-900 dark:text-gray-100">
                             {formatDate(r.reviewedAt)}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-stone-400 dark:text-gray-500">
                             Review #{r.reviewCount} · next{" "}
                             {formatDate(r.nextReviewAt)}
                           </span>
@@ -580,7 +566,7 @@ export function ProblemDetail() {
                           </button>
                           <button
                             onClick={() => startDeleteReview(r)}
-                            className="text-red-600 hover:underline dark:text-red-400"
+                            className="text-red-500 hover:underline dark:text-red-400"
                           >
                             Delete
                           </button>
@@ -596,7 +582,7 @@ export function ProblemDetail() {
       )}
 
       {undoToast && (
-        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg bg-gray-900 px-5 py-3 text-sm text-white shadow-xl dark:bg-gray-100 dark:text-gray-900">
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-xl bg-stone-900 px-5 py-3 text-sm text-white shadow-xl dark:bg-gray-100 dark:text-gray-900">
           <span>
             {undoToast.type === "problem"
               ? "Problem deleted"
@@ -623,10 +609,10 @@ function MetaChip({
 }) {
   return (
     <span className="flex items-baseline gap-1">
-      <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+      <span className="text-xs uppercase tracking-wide text-stone-400 dark:text-gray-500">
         {label}
       </span>
-      <span className="font-semibold text-gray-900 dark:text-white">{children}</span>
+      <span className="font-semibold text-stone-900 dark:text-white">{children}</span>
     </span>
   );
 }

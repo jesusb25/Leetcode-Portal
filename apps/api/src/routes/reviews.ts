@@ -167,6 +167,18 @@ reviewsRouter.post(
 );
 
 /**
+ * DELETE /reviews/reset — wipe all review history and schedules for the user.
+ */
+reviewsRouter.delete(
+  "/reset",
+  asyncHandler(async (req, res) => {
+    await db.delete(reviews).where(eq(reviews.userId, req.userId));
+    await db.delete(problemSchedule).where(eq(problemSchedule.userId, req.userId));
+    res.status(204).end();
+  }),
+);
+
+/**
  * DELETE /reviews/:problemId/last — undo the most recent "mark as done".
  *
  * Removes the latest review event and re-derives the schedule from the remaining

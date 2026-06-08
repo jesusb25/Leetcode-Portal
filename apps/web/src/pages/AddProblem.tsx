@@ -25,6 +25,8 @@ export function AddProblem() {
     api.categories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
+  const isLeetcodeUrl = url.includes("leetcode.com");
+
   async function handleFetch() {
     if (!url) return;
     setFetching(true);
@@ -76,23 +78,30 @@ export function AddProblem() {
       <h1 className="text-2xl font-bold">Add Problem</h1>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">LeetCode URL</label>
+        <label className="mb-1 block text-sm font-medium">Problem URL</label>
         <div className="flex gap-2">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://leetcode.com/problems/two-sum/"
+            placeholder="https://neetcode.io/problems/two-integer-sum"
             className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           />
-          <button
-            type="button"
-            onClick={() => void handleFetch()}
-            disabled={fetching || !url}
-            className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-          >
-            {fetching ? "Fetching…" : "Fetch"}
-          </button>
+          {isLeetcodeUrl && (
+            <button
+              type="button"
+              onClick={() => void handleFetch()}
+              disabled={fetching || !url}
+              className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              {fetching ? "Fetching…" : "Fetch"}
+            </button>
+          )}
         </div>
+        {url && !isLeetcodeUrl && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            NeetCode URL — fill in the title and difficulty manually.
+          </p>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

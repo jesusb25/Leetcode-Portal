@@ -1,4 +1,4 @@
-import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
+import type { Category, Difficulty, ProblemWithSchedule, Review } from "@repo/shared";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CategoryBadge } from "../components/CategoryBadge";
@@ -36,9 +36,18 @@ export function ProblemDetail() {
   const [categoryId, setCategoryId] = useState("");
   const [url, setUrl] = useState("");
 
-  // Inline editor for correcting when the last review actually happened.
-  const [editingDate, setEditingDate] = useState(false);
+  // Full "marked done" history plus the inline editor for correcting a single entry.
+  const [reviewLog, setReviewLog] = useState<Review[]>([]);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [reviewedAtInput, setReviewedAtInput] = useState("");
+
+  async function loadReviews(problemId: string) {
+    try {
+      setReviewLog(await api.listReviews(problemId));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   async function load() {
     if (!id) return;
@@ -49,6 +58,7 @@ export function ProblemDetail() {
       setDifficulty(p.difficulty);
       setCategoryId(p.category?.id ?? "");
       setUrl(p.url);
+      await loadReviews(id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -88,30 +98,30 @@ export function ProblemDetail() {
     }
   }
 
-  async function undoReview() {
-    if (!id) return;
-    if (!confirm("Undo the last review for this problem?")) return;
+  function startEditReview(review: Review) {
+    setReviewedAtInput(toDateTimeLocal(review.reviewedAt));
+    setEditingReviewId(review.id);
+  }
+
+  async function saveReviewEdit() {
+    if (!id || !editingReviewId || !reviewedAtInput) return;
     setError(null);
     try {
-      await api.undoLastReview(id);
-      setEditingDate(false);
+      await api.editReview(id, editingReviewId, new Date(reviewedAtInput).toISOString());
+      setEditingReviewId(null);
       await load();
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
-  function startEditDate() {
-    setReviewedAtInput(toDateTimeLocal(problem?.schedule?.lastReviewedAt));
-    setEditingDate(true);
-  }
-
-  async function saveReviewDate() {
-    if (!id || !reviewedAtInput) return;
+  async function deleteReview(reviewId: string) {
+    if (!id) return;
+    if (!confirm("Delete this review log? Remaining reviews will be rescheduled.")) return;
     setError(null);
     try {
-      await api.editLastReview(id, new Date(reviewedAtInput).toISOString());
-      setEditingDate(false);
+      await api.deleteReview(id, reviewId);
+      setEditingReviewId(null);
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -253,42 +263,7 @@ export function ProblemDetail() {
               {problem.companies.length > 0 ? problem.companies.join(", ") : "—"}
             </Field>
             <Field label="Reviews completed">{problem.schedule?.reviewCount ?? 0}</Field>
-            <Field label="Last reviewed">
-              {editingDate ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="datetime-local"
-                    value={reviewedAtInput}
-                    onChange={(e) => setReviewedAtInput(e.target.value)}
-                    className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                  />
-                  <button
-                    onClick={() => void saveReviewDate()}
-                    className="rounded bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingDate(false)}
-                    className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <span className="flex items-center gap-2">
-                  {formatDate(problem.schedule?.lastReviewedAt)}
-                  {hasReviews && (
-                    <button
-                      onClick={startEditDate}
-                      className="text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-                    >
-                      Edit
-                    </button>
-                  )}
-                </span>
-              )}
-            </Field>
+            <Field label="Last reviewed">{formatDate(problem.schedule?.lastReviewedAt)}</Field>
             <Field label="Next review">{formatDate(problem.schedule?.nextReviewAt)}</Field>
           </dl>
 
@@ -299,15 +274,70 @@ export function ProblemDetail() {
             >
               Mark as Done
             </button>
-            {hasReviews && (
-              <button
-                onClick={() => void undoReview()}
-                className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-              >
-                Undo last review
-              </button>
-            )}
           </div>
+
+          <section className="space-y-2">
+            <h2 className="text-lg font-semibold">Review history</h2>
+            {!hasReviews ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Not reviewed yet. Click “Mark as Done” to log your first review.
+              </p>
+            ) : (
+              <ul className="divide-y divide-gray-200 rounded border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+                {reviewLog.map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
+                    {editingReviewId === r.id ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="datetime-local"
+                          value={reviewedAtInput}
+                          onChange={(e) => setReviewedAtInput(e.target.value)}
+                          className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        />
+                        <button
+                          onClick={() => void saveReviewEdit()}
+                          className="rounded bg-gray-900 px-2 py-1 text-xs font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingReviewId(null)}
+                          className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {formatDate(r.reviewedAt)}
+                          </span>
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                            Review #{r.reviewCount} · next {formatDate(r.nextReviewAt)}
+                          </span>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-3 text-xs font-medium">
+                          <button
+                            onClick={() => startEditReview(r)}
+                            className="text-indigo-600 hover:underline dark:text-indigo-400"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => void deleteReview(r.id)}
+                            className="text-red-600 hover:underline dark:text-red-400"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </>
       )}
     </div>

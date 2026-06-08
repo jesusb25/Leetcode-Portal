@@ -7,12 +7,15 @@ const QUERY = "(prefers-color-scheme: dark)";
 
 export function useThemePreference() {
   const [theme, setThemeState] = useState<ThemePreference>(() => readStoredTheme());
+  const [isDark, setIsDark] = useState<boolean>(() =>
+    resolveIsDark(readStoredTheme(), prefersDark()),
+  );
 
   useEffect(() => {
     const media = window.matchMedia(QUERY);
 
     function sync() {
-      applyTheme(theme, media.matches);
+      setIsDark(applyTheme(theme, media.matches));
     }
 
     sync();
@@ -31,7 +34,7 @@ export function useThemePreference() {
     }
   }
 
-  return { theme, setTheme };
+  return { theme, setTheme, isDark };
 }
 
 function readStoredTheme(): ThemePreference {
@@ -41,12 +44,21 @@ function readStoredTheme(): ThemePreference {
   return isThemePreference(stored) ? stored : "system";
 }
 
-function applyTheme(theme: ThemePreference, systemPrefersDark: boolean) {
-  const resolvedTheme = theme === "system" && systemPrefersDark ? "dark" : theme;
-  const isDark = resolvedTheme === "dark";
+function applyTheme(theme: ThemePreference, systemPrefersDark: boolean): boolean {
+  const isDark = resolveIsDark(theme, systemPrefersDark);
 
   document.documentElement.classList.toggle("dark", isDark);
   document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  return isDark;
+}
+
+function resolveIsDark(theme: ThemePreference, systemPrefersDark: boolean): boolean {
+  return theme === "dark" || (theme === "system" && systemPrefersDark);
+}
+
+function prefersDark(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(QUERY).matches;
 }
 
 function isThemePreference(value: string | null): value is ThemePreference {

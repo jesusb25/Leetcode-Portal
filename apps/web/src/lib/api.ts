@@ -7,6 +7,7 @@ import type {
   MarkDoneResponse,
   ProblemFilters,
   ProblemWithSchedule,
+  Review,
   ReviewScheduleResponse,
   UpdateProblemBody,
 } from "@repo/shared";
@@ -85,6 +86,22 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ reviewedAt }),
     });
+  },
+  listReviews(problemId: string): Promise<Review[]> {
+    return request(`/reviews/${problemId}/log`);
+  },
+  editReview(
+    problemId: string,
+    reviewId: string,
+    reviewedAt: string,
+  ): Promise<ReviewScheduleResponse> {
+    return request(`/reviews/${problemId}/log/${reviewId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ reviewedAt }),
+    });
+  },
+  deleteReview(problemId: string, reviewId: string): Promise<ReviewScheduleResponse> {
+    return request(`/reviews/${problemId}/log/${reviewId}`, { method: "DELETE" });
   },
 
   // Schedule / dashboard

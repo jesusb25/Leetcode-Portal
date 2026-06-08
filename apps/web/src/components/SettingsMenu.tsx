@@ -63,9 +63,9 @@ export function SettingsMenu() {
           >
             <div
               onMouseDown={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-xl border border-stone-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+              className="w-full max-w-sm rounded-xl border border-stone-400 bg-white shadow-xl dark:border-gray-600 dark:bg-gray-900"
             >
-              <div className="flex items-center justify-between border-b border-stone-200 px-5 py-3.5 dark:border-gray-800">
+              <div className="flex items-center justify-between border-b border-stone-400 px-5 py-3.5 dark:border-gray-600">
                 <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">
                   Settings
                 </h2>
@@ -98,7 +98,7 @@ export function SettingsMenu() {
                         type="button"
                         onClick={() => setConfirmReset(false)}
                         disabled={resetting}
-                        className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                        className="flex-1 rounded-lg border border-stone-400 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                       >
                         Cancel
                       </button>
@@ -108,7 +108,7 @@ export function SettingsMenu() {
                   <button
                     type="button"
                     onClick={() => setConfirmReset(true)}
-                    className="flex w-full items-center gap-2.5 rounded-lg border border-stone-200 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-gray-700 dark:text-red-400 dark:hover:bg-red-950/40"
+                    className="flex w-full items-center gap-2.5 rounded-lg border border-stone-400 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-red-950/40"
                   >
                     <ResetIcon />
                     Reset Progress

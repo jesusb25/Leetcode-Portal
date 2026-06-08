@@ -64,7 +64,7 @@ export function AddProblem() {
   }
 
   const inputCls =
-    "w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
+    "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
 
   return (
     <div className="max-w-xl space-y-5">

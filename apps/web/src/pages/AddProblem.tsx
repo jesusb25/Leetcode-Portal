@@ -1,9 +1,35 @@
 import type { Category, Difficulty } from "@repo/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
+
+const CATEGORY_ORDER = [
+  "arrays-hashing",
+  "two-pointers",
+  "sliding-window",
+  "stack",
+  "binary-search",
+  "linked-list",
+  "trees",
+  "heap-priority-queue",
+  "backtracking",
+  "tries",
+  "graphs",
+  "advanced-graphs",
+  "1d-dynamic-programming",
+  "2d-dynamic-programming",
+  "greedy",
+  "intervals",
+  "math-geometry",
+  "bit-manipulation",
+];
+
+function categoryRank(slug?: string) {
+  const i = slug ? CATEGORY_ORDER.indexOf(slug) : -1;
+  return i === -1 ? CATEGORY_ORDER.length + 1 : i;
+}
 
 export function AddProblem() {
   const navigate = useNavigate();
@@ -17,16 +43,49 @@ export function AddProblem() {
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [categoryId, setCategoryId] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
+  const [comboOpen, setComboOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const comboRef = useRef<HTMLDivElement>(null);
   const [leetcodeId, setLeetcodeId] = useState<number | undefined>();
   const [fetching, setFetching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.categories().then(setCategories).catch(() => setCategories([]));
+    api
+      .categories()
+      .then((cats) => cats.sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug)))
+      .then(setCategories)
+      .catch(() => setCategories([]));
   }, []);
 
-  const isLeetcodeUrl = url.includes("leetcode.com");
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (comboRef.current && !comboRef.current.contains(e.target as Node)) {
+        setComboOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const filteredCategories = categorySearch
+    ? categories.filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+    : categories;
+
+  function selectCategory(cat: Category) {
+    setCategoryId(cat.id);
+    setCategorySearch(cat.name);
+    setComboOpen(false);
+  }
+
+  function clearCategory() {
+    setCategoryId("");
+    setCategorySearch("");
+  }
+
+  const isFetchableUrl = url.includes("leetcode.com") || url.includes("neetcode.io/problems");
 
   async function handleFetch() {
     if (!url) return;
@@ -36,10 +95,10 @@ export function AddProblem() {
       const meta = await api.fetchMetadata(url);
       setTitle(meta.title);
       setDifficulty(meta.difficulty);
-      setLeetcodeId(meta.leetcodeId);
+      if (meta.leetcodeId) setLeetcodeId(meta.leetcodeId);
       if (meta.categorySlug) {
         const match = categories.find((c) => c.slug === meta.categorySlug);
-        if (match) setCategoryId(match.id);
+        if (match) selectCategory(match);
       }
     } catch (e) {
       setError((e as Error).message);
@@ -83,7 +142,7 @@ export function AddProblem() {
             placeholder="https://neetcode.io/problems/two-integer-sum"
             className={inputCls}
           />
-          {isLeetcodeUrl && (
+          {isFetchableUrl && (
             <button
               type="button"
               onClick={() => void handleFetch()}
@@ -94,11 +153,6 @@ export function AddProblem() {
             </button>
           )}
         </div>
-        {url && !isLeetcodeUrl && (
-          <p className="mt-1 text-xs text-stone-400 dark:text-gray-500">
-            NeetCode URL — fill in the title and difficulty manually.
-          </p>
-        )}
       </div>
 
       {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
@@ -129,20 +183,70 @@ export function AddProblem() {
           </select>
         </div>
 
-        <div>
+        <div ref={comboRef} className="relative">
           <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className={inputCls}
-          >
-            <option value="">— none —</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <input
+              value={categorySearch}
+              onChange={(e) => {
+                setCategorySearch(e.target.value);
+                setCategoryId("");
+                setHighlightedIndex(0);
+                setComboOpen(true);
+              }}
+              onFocus={() => setComboOpen(true)}
+              onKeyDown={(e) => {
+                if (!comboOpen) return;
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.min(i + 1, filteredCategories.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.max(i - 1, 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (filteredCategories[highlightedIndex]) selectCategory(filteredCategories[highlightedIndex]);
+                } else if (e.key === "Escape") {
+                  setComboOpen(false);
+                }
+              }}
+              placeholder="Search category…"
+              className={inputCls}
+              autoComplete="off"
+            />
+            {categorySearch && (
+              <button
+                type="button"
+                onClick={clearCategory}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 dark:text-gray-500 dark:hover:text-gray-200"
+                tabIndex={-1}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {comboOpen && (
+            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
+              {filteredCategories.length === 0 ? (
+                <li className="px-3 py-2 text-stone-400 dark:text-gray-500">No matches</li>
+              ) : (
+                filteredCategories.map((c, i) => (
+                  <li
+                    key={c.id}
+                    onMouseDown={() => selectCategory(c)}
+                    onMouseEnter={() => setHighlightedIndex(i)}
+                    className={`cursor-pointer px-3 py-2 ${
+                      i === highlightedIndex
+                        ? "bg-stone-100 text-stone-900 dark:bg-gray-700 dark:text-gray-100"
+                        : "text-stone-700 dark:text-gray-300"
+                    }`}
+                  >
+                    {c.name}
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
 
         <button

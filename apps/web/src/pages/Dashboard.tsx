@@ -110,6 +110,22 @@ export function Dashboard() {
         <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
       )}
 
+      {loading && (
+        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          <div className="mb-3 h-3 w-14 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-6 w-52 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+              <div className="flex gap-2">
+                <div className="h-4 w-14 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
+                <div className="h-4 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+              </div>
+            </div>
+            <div className="h-9 w-28 shrink-0 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
+          </div>
+        </section>
+      )}
+
       {!loading && upNext && (
         <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-900 dark:text-gray-500">
@@ -231,7 +247,19 @@ export function Dashboard() {
           )}
         </div>
         {loading ? (
-          <p className="text-stone-500 dark:text-gray-400">Loading…</p>
+          <div className="space-y-2">
+            {(["w-40", "w-32", "w-36"] as const).map((w) => (
+              <div
+                key={w}
+                className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+              >
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
+                  <div className="h-5 w-8 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : queue.length === 0 ? (
           <p className="text-stone-500 dark:text-gray-400">
             Nothing due. Nice work! 🎉

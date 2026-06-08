@@ -17,12 +17,6 @@ query getProblem($titleSlug: String!) {
   }
 }`;
 
-/**
- * Map LeetCode topic-tag slugs to our internal category slugs. LeetCode tags are
- * fine-grained (e.g. "hash-table", "depth-first-search"); we collapse them onto the
- * NeetCode sections. Order matters — earlier keys win when several tags are present,
- * so the resolver checks tags in the order LeetCode returns them.
- */
 const TAG_TO_CATEGORY: Record<string, string> = {
   "hash-table": "arrays-hashing",
   array: "arrays-hashing",
@@ -55,9 +49,13 @@ const TAG_TO_CATEGORY: Record<string, string> = {
 
 const VALID_DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
-/** Extract the title slug from a LeetCode problem URL. */
 export function extractSlug(url: string): string | null {
   const match = url.match(/leetcode\.com\/problems\/([^/?#]+)/i);
+  return match ? match[1] : null;
+}
+
+export function extractNeetcodeSlug(url: string): string | null {
+  const match = url.match(/neetcode\.io\/problems\/([^/?#]+)/i);
   return match ? match[1] : null;
 }
 
@@ -73,16 +71,7 @@ type GraphQLResponse = {
   };
 };
 
-/**
- * Fetch problem metadata from LeetCode's GraphQL API (spec §7).
- * Returns the closest matching internal category slug (or null) plus the raw tags.
- */
-export async function fetchMetadata(url: string): Promise<FetchMetadataResponse> {
-  const slug = extractSlug(url);
-  if (!slug) {
-    throw new HttpError(400, `Could not extract a problem slug from URL: ${url}`);
-  }
-
+async function fetchLeetcodeBySlug(slug: string): Promise<FetchMetadataResponse> {
   let res: Response;
   try {
     res = await fetch(GRAPHQL_ENDPOINT, {
@@ -128,4 +117,56 @@ export async function fetchMetadata(url: string): Promise<FetchMetadataResponse>
     categorySlug,
     rawTags,
   };
+}
+
+async function fetchNeetcodeMetadata(url: string): Promise<FetchMetadataResponse> {
+  const neetcodeSlug = extractNeetcodeSlug(url);
+  if (!neetcodeSlug) {
+    throw new HttpError(400, `Could not extract a problem slug from NeetCode URL: ${url}`);
+  }
+
+  // Title always comes from the URL slug: "insert-new-interval" → "Insert New Interval"
+  const title = neetcodeSlug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  // Try to get difficulty and category by finding the embedded LeetCode link on the page
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml",
+      },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const lcLinkMatch = html.match(/https:\/\/(?:www\.)?leetcode\.com\/problems\/([a-z0-9-]+)/i);
+      if (lcLinkMatch) {
+        const lcData = await fetchLeetcodeBySlug(lcLinkMatch[1]);
+        return { ...lcData, title };
+      }
+    }
+  } catch {
+    // fall through to defaults
+  }
+
+  return { title, difficulty: "Medium", categorySlug: null, rawTags: [] };
+}
+
+/**
+ * Fetch problem metadata from a LeetCode or NeetCode URL.
+ * For NeetCode URLs, scrapes the page to find the linked LeetCode problem,
+ * then uses the LeetCode GraphQL API for full metadata.
+ */
+export async function fetchMetadata(url: string): Promise<FetchMetadataResponse> {
+  if (url.includes("neetcode.io")) {
+    return fetchNeetcodeMetadata(url);
+  }
+
+  const slug = extractSlug(url);
+  if (!slug) {
+    throw new HttpError(400, `Could not extract a problem slug from URL: ${url}`);
+  }
+  return fetchLeetcodeBySlug(slug);
 }

@@ -81,11 +81,11 @@ export interface FetchMetadataBody {
   url: string;
 }
 
-/** Result of scraping a LeetCode URL (spec §6/§7). */
+/** Result of scraping a LeetCode or NeetCode URL. */
 export interface FetchMetadataResponse {
   title: string;
   difficulty: Difficulty;
-  leetcodeId: number;
+  leetcodeId?: number;
   /** Matched category slug, or null when no category matched. */
   categorySlug: string | null;
   /** Raw LeetCode topic tags so the user can pick when no match is found. */

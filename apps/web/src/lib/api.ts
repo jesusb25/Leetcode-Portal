@@ -75,8 +75,8 @@ export const api = {
   },
 
   // Reviews
-  markDone(problemId: string): Promise<MarkDoneResponse> {
-    return request("/reviews", { method: "POST", body: JSON.stringify({ problemId }) });
+  markDone(problemId: string, confidence?: string): Promise<MarkDoneResponse> {
+    return request("/reviews", { method: "POST", body: JSON.stringify({ problemId, confidence }) });
   },
   undoLastReview(problemId: string): Promise<ReviewScheduleResponse> {
     return request(`/reviews/${problemId}/last`, { method: "DELETE" });

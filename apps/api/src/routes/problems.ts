@@ -79,7 +79,6 @@ problemsRouter.post(
         url: body.url,
         difficulty: body.difficulty,
         categoryId: body.categoryId,
-        companies: body.companies ?? [],
         isNeetcode150: body.isNeetcode150 ?? false,
       })
       .returning();
@@ -109,8 +108,14 @@ problemsRouter.put(
         url: body.url,
         difficulty: body.difficulty,
         categoryId: body.categoryId,
-        companies: body.companies,
         isNeetcode150: body.isNeetcode150,
+        notes: body.notes,
+        codeSnippet: body.codeSnippet,
+        githubUrl: body.githubUrl,
+        timeComplexity: body.timeComplexity,
+        spaceComplexity: body.spaceComplexity,
+        language: body.language,
+        problemSummary: body.problemSummary,
       })
       .where(and(eq(problems.id, req.params.id), eq(problems.userId, req.userId)))
       .returning();

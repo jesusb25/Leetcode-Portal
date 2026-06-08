@@ -38,6 +38,13 @@ export const problems = pgTable(
     categoryId: uuid("category_id").references(() => categories.id),
     companies: text("companies").array(),
     isNeetcode150: boolean("is_neetcode_150").default(false),
+    notes: text("notes"),
+    codeSnippet: text("code_snippet"),
+    githubUrl: text("github_url"),
+    timeComplexity: text("time_complexity"),
+    spaceComplexity: text("space_complexity"),
+    language: text("language"),
+    problemSummary: text("problem_summary"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
@@ -57,6 +64,7 @@ export const reviews = pgTable("reviews", {
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }).defaultNow(),
   reviewCount: integer("review_count").notNull(),
   nextReviewAt: timestamp("next_review_at", { withTimezone: true }).notNull(),
+  confidence: text("confidence"),
 });
 
 export const problemSchedule = pgTable("problem_schedule", {

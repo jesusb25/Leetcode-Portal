@@ -14,7 +14,6 @@ query getProblem($titleSlug: String!) {
       name
       slug
     }
-    companyTagStats
   }
 }`;
 

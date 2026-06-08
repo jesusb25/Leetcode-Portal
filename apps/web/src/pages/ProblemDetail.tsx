@@ -7,18 +7,37 @@ import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
+const LANGUAGES = ["Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "Rust", "Swift", "Kotlin"];
+const CONFIDENCE_OPTIONS = [
+  { value: "Struggled", label: "😓 Struggled" },
+  { value: "Okay", label: "🙂 Okay" },
+  { value: "Mastered", label: "⭐ Mastered" },
+];
 
 function formatDate(iso?: string) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString();
 }
 
-/** Convert an ISO timestamp to a value usable by an <input type="datetime-local">. */
 function toDateTimeLocal(iso?: string) {
   const d = iso ? new Date(iso) : new Date();
-  // Shift to local time so the input reflects the user's wall clock, then trim seconds/zone.
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 16);
+}
+
+function ConfidenceBadge({ value }: { value?: string }) {
+  if (!value) return null;
+  const opt = CONFIDENCE_OPTIONS.find((o) => o.value === value);
+  const colors: Record<string, string> = {
+    Struggled: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
+    Okay: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200",
+    Mastered: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
+  };
+  return (
+    <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${colors[value] ?? ""}`}>
+      {opt?.label ?? value}
+    </span>
+  );
 }
 
 export function ProblemDetail() {
@@ -30,16 +49,27 @@ export function ProblemDetail() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Edit form state
+  // --- Metadata edit fields ---
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [categoryId, setCategoryId] = useState("");
   const [url, setUrl] = useState("");
 
-  // Full "marked done" history plus the inline editor for correcting a single entry.
+  // --- Study notes fields (always visible, saved separately) ---
+  const [problemSummary, setProblemSummary] = useState("");
+  const [codeSnippet, setCodeSnippet] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [language, setLanguage] = useState("");
+  const [timeComplexity, setTimeComplexity] = useState("");
+  const [spaceComplexity, setSpaceComplexity] = useState("");
+  const [notes, setNotes] = useState("");
+  const [studyDirty, setStudyDirty] = useState(false);
+
+  // --- Review log ---
   const [reviewLog, setReviewLog] = useState<Review[]>([]);
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [reviewedAtInput, setReviewedAtInput] = useState("");
+  const [confidence, setConfidence] = useState("");
 
   async function loadReviews(problemId: string) {
     try {
@@ -58,6 +88,14 @@ export function ProblemDetail() {
       setDifficulty(p.difficulty);
       setCategoryId(p.category?.id ?? "");
       setUrl(p.url);
+      setProblemSummary(p.problemSummary ?? "");
+      setCodeSnippet(p.codeSnippet ?? "");
+      setGithubUrl(p.githubUrl ?? "");
+      setLanguage(p.language ?? "");
+      setTimeComplexity(p.timeComplexity ?? "");
+      setSpaceComplexity(p.spaceComplexity ?? "");
+      setNotes(p.notes ?? "");
+      setStudyDirty(false);
       await loadReviews(id);
     } catch (e) {
       setError((e as Error).message);
@@ -70,7 +108,7 @@ export function ProblemDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function save() {
+  async function saveMeta() {
     if (!id) return;
     setError(null);
     try {
@@ -87,11 +125,32 @@ export function ProblemDetail() {
     }
   }
 
+  async function saveStudyNotes() {
+    if (!id) return;
+    setError(null);
+    try {
+      const updated = await api.updateProblem(id, {
+        problemSummary: problemSummary || undefined,
+        codeSnippet: codeSnippet || undefined,
+        githubUrl: githubUrl || undefined,
+        language: language || undefined,
+        timeComplexity: timeComplexity || undefined,
+        spaceComplexity: spaceComplexity || undefined,
+        notes: notes || undefined,
+      });
+      setProblem(updated);
+      setStudyDirty(false);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function markDone() {
     if (!id) return;
     setError(null);
     try {
-      await api.markDone(id);
+      await api.markDone(id, confidence || undefined);
+      setConfidence("");
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -139,45 +198,50 @@ export function ProblemDetail() {
     }
   }
 
+  function markStudyDirty<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v);
+      setStudyDirty(true);
+    };
+  }
+
   if (!problem) {
     return <p className="text-gray-500 dark:text-gray-400">{error ?? "Loading…"}</p>;
   }
 
   const questionUrl = getProblemQuestionUrl(problem);
-  const questionLinkLabel = questionUrl.includes("neetcode.io")
-    ? "Open on NeetCode ↗"
-    : "Open problem ↗";
+  const questionLinkLabel = questionUrl.includes("neetcode.io") ? "NeetCode ↗" : "Open ↗";
   const hasReviews = (problem.schedule?.reviewCount ?? 0) > 0;
 
+  const inputCls =
+    "w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100";
+  const sectionCls =
+    "space-y-3 rounded border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900";
+  const sectionHeadCls =
+    "text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400";
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-5">
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {editing ? (
+        /* ── Metadata edit form ── */
         <div className="space-y-4">
           <h1 className="text-2xl font-bold">Edit Problem</h1>
           <div>
             <label className="mb-1 block text-sm font-medium">Title</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-            />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">URL</label>
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-            />
+            <input value={url} onChange={(e) => setUrl(e.target.value)} className={inputCls} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Difficulty</label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+              className={inputCls}
             >
               {DIFFICULTIES.map((d) => (
                 <option key={d} value={d}>
@@ -191,7 +255,7 @@ export function ProblemDetail() {
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+              className={inputCls}
             >
               <option value="">— none —</option>
               {categories.map((c) => (
@@ -203,7 +267,7 @@ export function ProblemDetail() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => void save()}
+              onClick={() => void saveMeta()}
               className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
             >
               Save
@@ -218,6 +282,7 @@ export function ProblemDetail() {
         </div>
       ) : (
         <>
+          {/* ── Header ── */}
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold">{problem.title}</h1>
@@ -231,7 +296,7 @@ export function ProblemDetail() {
                 )}
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
                 className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -247,8 +312,9 @@ export function ProblemDetail() {
             </div>
           </div>
 
-          <dl className="grid grid-cols-2 gap-3 rounded border border-gray-200 bg-white p-4 text-sm dark:border-gray-800 dark:bg-gray-900">
-            <Field label="URL">
+          {/* ── Compact metadata bar ── */}
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 rounded border border-gray-200 bg-white px-4 py-3 text-sm dark:border-gray-800 dark:bg-gray-900">
+            <MetaChip label="URL">
               <a
                 href={questionUrl}
                 target="_blank"
@@ -257,17 +323,132 @@ export function ProblemDetail() {
               >
                 {questionLinkLabel}
               </a>
-            </Field>
-            <Field label="LeetCode #">{problem.leetcodeId ?? "—"}</Field>
-            <Field label="Companies">
+            </MetaChip>
+            <MetaChip label="LC #">{problem.leetcodeId ?? "—"}</MetaChip>
+            <MetaChip label="Companies">
               {problem.companies.length > 0 ? problem.companies.join(", ") : "—"}
-            </Field>
-            <Field label="Reviews completed">{problem.schedule?.reviewCount ?? 0}</Field>
-            <Field label="Last reviewed">{formatDate(problem.schedule?.lastReviewedAt)}</Field>
-            <Field label="Next review">{formatDate(problem.schedule?.nextReviewAt)}</Field>
-          </dl>
+            </MetaChip>
+            <MetaChip label="Reviews">{problem.schedule?.reviewCount ?? 0}</MetaChip>
+            <MetaChip label="Last reviewed">{formatDate(problem.schedule?.lastReviewedAt)}</MetaChip>
+            <MetaChip label="Next review">{formatDate(problem.schedule?.nextReviewAt)}</MetaChip>
+          </div>
 
-          <div className="flex flex-wrap gap-2">
+          {/* ── Problem Context ── */}
+          <div className={sectionCls}>
+            <p className={sectionHeadCls}>Problem Context</p>
+            <textarea
+              value={problemSummary}
+              onChange={(e) => markStudyDirty(setProblemSummary)(e.target.value)}
+              placeholder="Brief summary or core constraints to reduce context-switching back to LeetCode…"
+              rows={3}
+              className={`${inputCls} resize-y`}
+            />
+          </div>
+
+          {/* ── Solution & Code ── */}
+          <div className={sectionCls}>
+            <p className={sectionHeadCls}>Solution & Code</p>
+            <div className="flex gap-3">
+              <div className="w-40 shrink-0">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Language</label>
+                <select
+                  value={language}
+                  onChange={(e) => markStudyDirty(setLanguage)(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">— select —</option>
+                  {LANGUAGES.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="min-w-0 flex-1">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">GitHub URL</label>
+                <input
+                  value={githubUrl}
+                  onChange={(e) => markStudyDirty(setGithubUrl)(e.target.value)}
+                  placeholder="https://github.com/…"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Code Snippet</label>
+              <textarea
+                value={codeSnippet}
+                onChange={(e) => markStudyDirty(setCodeSnippet)(e.target.value)}
+                placeholder="Paste your accepted solution here…"
+                rows={10}
+                className={`${inputCls} resize-y font-mono text-xs`}
+              />
+            </div>
+          </div>
+
+          {/* ── Complexity Analysis ── */}
+          <div className={sectionCls}>
+            <p className={sectionHeadCls}>Complexity Analysis</p>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Time</label>
+                <input
+                  value={timeComplexity}
+                  onChange={(e) => markStudyDirty(setTimeComplexity)(e.target.value)}
+                  placeholder="O(N)"
+                  className={inputCls}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">Space</label>
+                <input
+                  value={spaceComplexity}
+                  onChange={(e) => markStudyDirty(setSpaceComplexity)(e.target.value)}
+                  placeholder="O(1)"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Personal Notes ── */}
+          <div className={sectionCls}>
+            <p className={sectionHeadCls}>Personal Notes</p>
+            <textarea
+              value={notes}
+              onChange={(e) => markStudyDirty(setNotes)(e.target.value)}
+              placeholder="Key takeaways, edge cases encountered, alternative approaches…"
+              rows={5}
+              className={`${inputCls} resize-y`}
+            />
+          </div>
+
+          {/* Save study notes — appears when any study field is dirty */}
+          {studyDirty && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => void saveStudyNotes()}
+                className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+              >
+                Save Notes
+              </button>
+            </div>
+          )}
+
+          {/* ── Mark as Done + Confidence ── */}
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={confidence}
+              onChange={(e) => setConfidence(e.target.value)}
+              className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            >
+              <option value="">— confidence —</option>
+              {CONFIDENCE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
             <button
               onClick={() => void markDone()}
               className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
@@ -276,11 +457,13 @@ export function ProblemDetail() {
             </button>
           </div>
 
+          {/* ── Review History ── */}
           <section className="space-y-2">
             <h2 className="text-lg font-semibold">Review history</h2>
             {!hasReviews ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Not reviewed yet. Click “Mark as Done” to log your first review.
+                Not reviewed yet. Select a confidence level and click "Mark as Done" to log your first
+                review.
               </p>
             ) : (
               <ul className="divide-y divide-gray-200 rounded border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
@@ -309,11 +492,12 @@ export function ProblemDetail() {
                       </div>
                     ) : (
                       <>
-                        <div className="text-sm">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
                           <span className="font-medium text-gray-900 dark:text-gray-100">
                             {formatDate(r.reviewedAt)}
                           </span>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                          <ConfidenceBadge value={r.confidence} />
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             Review #{r.reviewCount} · next {formatDate(r.nextReviewAt)}
                           </span>
                         </div>
@@ -344,11 +528,11 @@ export function ProblemDetail() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function MetaChip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</dt>
-      <dd className="mt-0.5">{children}</dd>
-    </div>
+    <span className="flex items-baseline gap-1">
+      <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
+      <span className="text-gray-900 dark:text-gray-100">{children}</span>
+    </span>
   );
 }

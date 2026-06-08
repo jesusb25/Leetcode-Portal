@@ -86,12 +86,12 @@ export function ProblemLibrary() {
   const groups = groupByCategory(filtered);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Problem Library</h1>
+        <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">Problem Library</h1>
         <Link
           to="/problems/new"
-          className="rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+          className="rounded bg-stone-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
         >
           Add Problem
         </Link>
@@ -101,7 +101,7 @@ export function ProblemLibrary() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded border border-gray-300 px-2 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -116,10 +116,10 @@ export function ProblemLibrary() {
             <button
               key={d}
               onClick={() => setDifficultyFilter(d)}
-              className={`rounded px-3 py-1.5 text-sm font-medium ${
+              className={`rounded px-3 py-1.5 text-sm font-medium transition ${
                 difficultyFilter === d
-                  ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-950"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                  ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
+                  : "border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
               }`}
             >
               {d}
@@ -128,31 +128,31 @@ export function ProblemLibrary() {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
 
       {loading ? (
-        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+        <p className="text-stone-500 dark:text-gray-400">Loading…</p>
       ) : groups.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-400">No problems match these filters.</p>
+        <p className="text-stone-500 dark:text-gray-400">No problems match these filters.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {groups.map((group) => {
             const isOpen = openGroups.has(group.key);
             return (
               <div
                 key={group.key}
-                className="rounded border border-gray-900 bg-white dark:border-gray-800 dark:bg-gray-900"
+                className="rounded-xl border border-stone-200 bg-white dark:border-gray-800 dark:bg-gray-900"
               >
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={() => toggleGroup(group.key)}
                   onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
-                  className="flex cursor-pointer select-none items-center justify-between gap-2 p-3 text-sm font-semibold text-gray-700 dark:text-gray-200"
+                  className="flex cursor-pointer select-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-stone-700 dark:text-gray-200"
                 >
                   <span className="flex items-center gap-2">
                     <svg
-                      className={`h-4 w-4 text-gray-400 transition-transform duration-250 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 text-stone-400 transition-transform duration-200 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
                       viewBox="0 0 20 20"
                       fill="none"
                       stroke="currentColor"
@@ -165,7 +165,7 @@ export function ProblemLibrary() {
                     </svg>
                     {group.name}
                   </span>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-500 dark:bg-gray-800 dark:text-gray-400">
                     {group.problems.length}
                   </span>
                 </div>
@@ -177,19 +177,19 @@ export function ProblemLibrary() {
                   }}
                 >
                   <div style={{ overflow: "hidden" }}>
-                    <ul className="divide-y divide-gray-900 border-t border-gray-900 dark:divide-gray-800 dark:border-gray-800">
+                    <ul className="divide-y divide-stone-100 border-t border-stone-100 dark:divide-gray-800 dark:border-gray-800">
                       {group.problems.map((p) => (
-                        <li key={p.id} className="flex items-center justify-between gap-4 p-3">
+                        <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3">
                           <div className="min-w-0">
                             <Link
                               to={`/problems/${p.id}`}
-                              className="font-medium text-gray-900 hover:underline dark:text-gray-100"
+                              className="font-medium text-stone-900 hover:underline dark:text-gray-100"
                             >
                               {p.title}
                             </Link>
                             <div className="mt-1 flex flex-wrap items-center gap-2">
                               <DifficultyBadge difficulty={p.difficulty} />
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                              <span className="text-xs text-stone-400 dark:text-gray-500">
                                 Reviewed {formatDate(p.schedule?.lastReviewedAt)} · Next{" "}
                                 {formatDate(p.schedule?.nextReviewAt)}
                               </span>

@@ -14,8 +14,13 @@ function DailyGoalRing({ done, total }: { done: number; total: number }) {
   const allClear = pct === 100;
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900">
-      <svg width="80" height="80" viewBox="0 0 80 80" className="shrink-0 -rotate-90">
+    <div className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <svg
+        width="80"
+        height="80"
+        viewBox="0 0 80 80"
+        className="shrink-0 -rotate-90"
+      >
         <defs>
           <filter id="ring-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -25,9 +30,19 @@ function DailyGoalRing({ done, total }: { done: number; total: number }) {
             </feMerge>
           </filter>
         </defs>
-        <circle cx="40" cy="40" r={RING_R} fill="none" stroke="currentColor" strokeWidth="7" className="text-gray-100 dark:text-gray-800" />
         <circle
-          cx="40" cy="40" r={RING_R}
+          cx="40"
+          cy="40"
+          r={RING_R}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="7"
+          className="text-stone-100 dark:text-gray-800"
+        />
+        <circle
+          cx="40"
+          cy="40"
+          r={RING_R}
           fill="none"
           stroke="currentColor"
           strokeWidth="7"
@@ -35,17 +50,10 @@ function DailyGoalRing({ done, total }: { done: number; total: number }) {
           strokeDasharray={RING_CIRC}
           strokeDashoffset={offset}
           filter="url(#ring-glow)"
-          className={allClear ? "text-green-500" : "text-blue-500"}
+          className={allClear ? "text-emerald-500" : "text-indigo-500"}
           style={{ transition: "stroke-dashoffset 0.4s ease" }}
         />
       </svg>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Daily Goal</p>
-        <p className={`text-2xl font-bold ${allClear ? "text-green-500" : "text-blue-500"}`}>
-          {pct}% {allClear ? "Done!" : "Clear!"}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{done} of {total} reviewed</p>
-      </div>
     </div>
   );
 }
@@ -70,7 +78,10 @@ export function Dashboard() {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
       try {
-        sessionStorage.setItem("dashboard-open-groups", JSON.stringify([...next]));
+        sessionStorage.setItem(
+          "dashboard-open-groups",
+          JSON.stringify([...next]),
+        );
       } catch {}
       return next;
     });
@@ -141,17 +152,21 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
+        Dashboard
+      </h1>
 
       {!loading && initialTotal > 0 && (
         <DailyGoalRing done={done} total={initialTotal} />
       )}
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+      )}
 
       {!loading && upNext && (
-        <section className="rounded-lg border border-gray-900 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+        <section className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-400 dark:text-gray-500">
             Up Next
           </p>
           <div className="flex items-center justify-between gap-4">
@@ -159,7 +174,7 @@ export function Dashboard() {
               <div className="flex items-center gap-1.5">
                 <Link
                   to={`/problems/${upNext.id}`}
-                  className="text-xl font-bold text-gray-900 hover:underline dark:text-gray-100"
+                  className="text-xl font-bold text-stone-900 hover:underline dark:text-gray-100"
                 >
                   {upNext.title}
                 </Link>
@@ -169,9 +184,18 @@ export function Dashboard() {
                   rel="noreferrer"
                   title="Open on NeetCode"
                   aria-label={`Open ${upNext.title} on NeetCode`}
-                  className="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="rounded p-1 text-stone-400 hover:text-stone-700 dark:hover:text-gray-200"
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <path d="M15 3h6v6" />
                     <path d="M10 14L21 3" />
@@ -181,9 +205,11 @@ export function Dashboard() {
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <DifficultyBadge difficulty={upNext.difficulty} />
                 {upNext.category && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{upNext.category.name}</span>
+                  <span className="text-xs text-stone-500 dark:text-gray-400">
+                    {upNext.category.name}
+                  </span>
                 )}
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-stone-400 dark:text-gray-500">
                   {upNext.daysOverdue > 0
                     ? `${upNext.daysOverdue} day${upNext.daysOverdue === 1 ? "" : "s"} overdue`
                     : "due now"}
@@ -192,7 +218,7 @@ export function Dashboard() {
             </div>
             <button
               onClick={() => void markDone(upNext)}
-              className="shrink-0 rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+              className="shrink-0 rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
             >
               Mark as Done
             </button>
@@ -201,9 +227,13 @@ export function Dashboard() {
       )}
 
       {lastDone && (
-        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <span className="text-gray-600 dark:text-gray-300">
-            Marked <span className="font-medium text-gray-900 dark:text-gray-100">{lastDone.title}</span> as done.
+        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <span className="text-stone-600 dark:text-gray-300">
+            Marked{" "}
+            <span className="font-medium text-stone-900 dark:text-gray-100">
+              {lastDone.title}
+            </span>{" "}
+            as done.
           </span>
           <div className="flex shrink-0 items-center gap-3">
             <button
@@ -214,7 +244,7 @@ export function Dashboard() {
             </button>
             <button
               onClick={() => setLastDone(null)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="text-stone-400 hover:text-stone-600 dark:hover:text-gray-200"
               aria-label="Dismiss"
             >
               ✕
@@ -225,11 +255,13 @@ export function Dashboard() {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">Review Queue</h2>
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">
+            Review Queue
+          </h2>
           {!loading && queue.length > 0 && (
             <div className="relative w-64">
               <svg
-                className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -246,27 +278,34 @@ export function Dashboard() {
                 placeholder="Search due problems…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded border border-gray-300 py-1.5 pl-8 pr-3 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-stone-200 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           )}
         </div>
         {loading ? (
-          <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+          <p className="text-stone-500 dark:text-gray-400">Loading…</p>
         ) : queue.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">Nothing due. Nice work! 🎉</p>
+          <p className="text-stone-500 dark:text-gray-400">
+            Nothing due. Nice work! 🎉
+          </p>
         ) : searchResults !== null ? (
           searchResults.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No due problems match "{search.trim()}".</p>
+            <p className="text-sm text-stone-500 dark:text-gray-400">
+              No due problems match "{search.trim()}".
+            </p>
           ) : (
-            <ul className="divide-y divide-gray-900 rounded border border-gray-900 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
               {searchResults.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-4 p-3">
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between gap-4 p-3"
+                >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <Link
                         to={`/problems/${p.id}`}
-                        className="font-medium text-gray-900 hover:underline dark:text-gray-100"
+                        className="font-medium text-stone-900 hover:underline dark:text-gray-100"
                       >
                         {p.title}
                       </Link>
@@ -276,9 +315,18 @@ export function Dashboard() {
                         rel="noreferrer"
                         title="Open on NeetCode"
                         aria-label={`Open ${p.title} on NeetCode`}
-                        className="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                        className="rounded p-1 text-stone-400 hover:text-stone-700 dark:hover:text-gray-200"
                       >
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
                           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                           <path d="M15 3h6v6" />
                           <path d="M10 14L21 3" />
@@ -287,15 +335,21 @@ export function Dashboard() {
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <DifficultyBadge difficulty={p.difficulty} />
-                      {p.category && <span className="text-xs text-gray-500 dark:text-gray-400">{p.category.name}</span>}
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {p.daysOverdue > 0 ? `${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue` : "due now"}
+                      {p.category && (
+                        <span className="text-xs text-stone-500 dark:text-gray-400">
+                          {p.category.name}
+                        </span>
+                      )}
+                      <span className="text-xs text-stone-400 dark:text-gray-500">
+                        {p.daysOverdue > 0
+                          ? `${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`
+                          : "due now"}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => void markDone(p)}
-                    className="shrink-0 rounded bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                    className="shrink-0 rounded bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
                   >
                     Mark as Done
                   </button>
@@ -304,24 +358,28 @@ export function Dashboard() {
             </ul>
           )
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {groupByCategory(queue).map((group) => {
               const isOpen = openGroups.has(group.key);
               return (
                 <div
                   key={group.key}
-                  className="rounded border border-gray-900 bg-white dark:border-gray-800 dark:bg-gray-900"
+                  className="rounded-xl border border-stone-200 bg-white dark:border-gray-800 dark:bg-gray-900"
                 >
                   <div
                     role="button"
                     tabIndex={0}
                     onClick={() => toggleGroup(group.key)}
-                    onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
-                    className="flex cursor-pointer select-none items-center justify-between gap-2 p-3 text-sm font-semibold text-gray-700 dark:text-gray-200"
+                    onKeyDown={(e) =>
+                      e.key === "Enter" || e.key === " "
+                        ? toggleGroup(group.key)
+                        : undefined
+                    }
+                    className="flex cursor-pointer select-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-stone-700 dark:text-gray-200"
                   >
                     <span className="flex items-center gap-2">
                       <svg
-                        className={`h-4 w-4 text-gray-400 transition-transform duration-250 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-4 w-4 text-stone-400 transition-transform duration-200 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
                         viewBox="0 0 20 20"
                         fill="none"
                         stroke="currentColor"
@@ -334,7 +392,7 @@ export function Dashboard() {
                       </svg>
                       {group.name}
                     </span>
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-500 dark:bg-gray-800 dark:text-gray-400">
                       {group.problems.length}
                     </span>
                   </div>
@@ -346,14 +404,17 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-gray-900 border-t border-gray-900 dark:divide-gray-800 dark:border-gray-800">
+                      <ul className="divide-y divide-stone-100 border-t border-stone-100 dark:divide-gray-800 dark:border-gray-800">
                         {group.problems.map((p) => (
-                          <li key={p.id} className="flex items-center justify-between gap-4 p-3">
+                          <li
+                            key={p.id}
+                            className="flex items-center justify-between gap-4 px-4 py-3"
+                          >
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
                                 <Link
                                   to={`/problems/${p.id}`}
-                                  className="font-medium text-gray-900 hover:underline dark:text-gray-100"
+                                  className="font-medium text-stone-900 hover:underline dark:text-gray-100"
                                 >
                                   {p.title}
                                 </Link>
@@ -363,7 +424,7 @@ export function Dashboard() {
                                   rel="noreferrer"
                                   title="Open on NeetCode"
                                   aria-label={`Open ${p.title} on NeetCode`}
-                                  className="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                                  className="rounded p-1 text-stone-400 hover:text-stone-700 dark:hover:text-gray-200"
                                 >
                                   <svg
                                     className="h-4 w-4"
@@ -383,7 +444,7 @@ export function Dashboard() {
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-2">
                                 <DifficultyBadge difficulty={p.difficulty} />
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                <span className="text-xs text-stone-400 dark:text-gray-500">
                                   {p.daysOverdue > 0
                                     ? `${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`
                                     : "due now"}
@@ -392,7 +453,7 @@ export function Dashboard() {
                             </div>
                             <button
                               onClick={() => void markDone(p)}
-                              className="shrink-0 rounded bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                              className="shrink-0 rounded bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
                             >
                               Mark as Done
                             </button>
@@ -407,7 +468,6 @@ export function Dashboard() {
           </div>
         )}
       </section>
-
     </div>
   );
 }
@@ -466,4 +526,3 @@ function groupByCategory(queue: DueProblem[]): QueueGroup[] {
   }
   return sorted;
 }
-

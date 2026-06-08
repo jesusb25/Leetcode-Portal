@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useThemePreference } from "../lib/theme";
+import { SettingsMenu } from "./SettingsMenu";
 import { ThemeToggle } from "./ThemeToggle";
 
 const SIDEBAR_STORAGE_KEY = "leetcode-srs-sidebar";
@@ -8,8 +9,8 @@ const SIDEBAR_STORAGE_KEY = "leetcode-srs-sidebar";
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `block rounded px-3 py-2 text-sm font-medium ${
     isActive
-      ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-950"
-      : "text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+      ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
+      : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
   }`;
 
 export function Layout() {
@@ -29,7 +30,7 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             type="button"
@@ -37,14 +38,14 @@ export function Layout() {
             aria-label={sidebarOpen ? "Hide navigation" : "Show navigation"}
             aria-expanded={sidebarOpen}
             title={sidebarOpen ? "Hide navigation" : "Show navigation"}
-            className="inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 bg-white text-gray-600 shadow-sm transition hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded border border-stone-200 bg-white text-stone-500 shadow-sm transition hover:bg-stone-50 hover:text-stone-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
           >
             <MenuIcon />
           </button>
           <a href="/dashboard" className="flex items-center gap-2">
             <BrainIcon />
-            <span className="text-lg font-bold text-gray-950 dark:text-gray-100">
-              Leetcode Spaced Repetition System
+            <span className="text-lg font-bold text-stone-900 dark:text-gray-100">
+              Leetcode SRS
             </span>
           </a>
 
@@ -57,12 +58,12 @@ export function Layout() {
 
       <div className="flex flex-1">
         <aside
-          className={`shrink-0 overflow-hidden border-r border-gray-200 bg-white transition-[width] duration-200 dark:border-gray-800 dark:bg-gray-950 ${
-            sidebarOpen ? "w-56" : "w-0 border-r-0"
+          className={`shrink-0 overflow-hidden border-r border-stone-200 bg-white transition-[width] duration-200 dark:border-gray-800 dark:bg-gray-950 ${
+            sidebarOpen ? "w-52" : "w-0 border-r-0"
           }`}
         >
           <nav
-            className={`flex w-56 flex-col gap-1 p-3 transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+            className={`flex h-full w-52 flex-col gap-0.5 p-3 transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
           >
             <NavLink to="/dashboard" className={linkClass}>
               Dashboard
@@ -73,10 +74,13 @@ export function Layout() {
             <NavLink to="/problems/new" className={linkClass}>
               Add Problem
             </NavLink>
+            <div className="mt-auto">
+              <SettingsMenu />
+            </div>
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 py-6">
+        <main className="min-w-0 flex-1 px-6 py-7">
           <div className="mx-auto max-w-5xl">
             <Outlet />
           </div>
@@ -94,7 +98,7 @@ function readStoredSidebar(): boolean {
 function BrainIcon() {
   return (
     <svg
-      className="h-6 w-6 text-gray-950 dark:text-gray-100"
+      className="h-5 w-5 text-stone-800 dark:text-gray-100"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

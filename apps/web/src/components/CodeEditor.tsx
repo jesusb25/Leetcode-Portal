@@ -69,7 +69,7 @@ export function CodeEditor({ value, onChange, language, minHeight = "200px" }: C
         lintKeymap: false,
       }}
       style={{ minHeight, fontSize: "12px" }}
-      className="rounded border border-gray-300 dark:border-gray-700 overflow-hidden"
+      className="rounded-lg border border-stone-200 dark:border-gray-700 overflow-hidden"
     />
   );
 }

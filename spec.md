@@ -10,15 +10,15 @@ A full-stack web application for spaced repetition practice of LeetCode problems
 
 ## 2. Tech Stack
 
-| Layer      | Technology                                                              |
-| ---------- | ----------------------------------------------------------------------- |
-| Frontend   | React 18 + Vite + TypeScript + Tailwind CSS + React Router v6           |
-| Backend    | Node.js + Express + TypeScript                                          |
-| Database   | PostgreSQL (via Supabase)                                               |
-| ORM        | Drizzle ORM                                                             |
+| Layer      | Technology                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| Frontend   | React 18 + Vite + TypeScript + Tailwind CSS + React Router v6                                        |
+| Backend    | Node.js + Express + TypeScript                                                                       |
+| Database   | PostgreSQL (via Supabase)                                                                            |
+| ORM        | Drizzle ORM                                                                                          |
 | Auth       | Supabase Auth (JWT, email/password) — middleware validates JWT; dev bypass via `DEV_USER_ID` env var |
-| Deployment | Vercel (frontend), Railway or Render (backend)                          |
-| Monorepo   | Turborepo with `apps/web`, `apps/api`, `packages/db`, `packages/shared` |
+| Deployment | Vercel (frontend), Railway or Render (backend)                                                       |
+| Monorepo   | Turborepo with `apps/web`, `apps/api`, `packages/db`, `packages/shared`                              |
 
 ---
 
@@ -229,8 +229,8 @@ interface FetchMetadataResponse {
   title: string;
   difficulty: Difficulty;
   leetcodeId: number;
-  categorySlug: string | null;   // matched category slug, or null
-  rawTags: { name: string; slug: string }[];  // original LeetCode topic tags
+  categorySlug: string | null; // matched category slug, or null
+  rawTags: { name: string; slug: string }[]; // original LeetCode topic tags
 }
 ```
 
@@ -256,7 +256,6 @@ Seed file at `packages/db/src/seeds/neetcode150.ts`. Idempotent — skips proble
 
 ### 9.2 Dashboard (`/dashboard`)
 
-- **Daily Goal Ring**: animated SVG progress ring showing % of due problems reviewed today (green at 100%)
 - **Review queue**: problems due today grouped by category, sorted by most overdue first (never-reviewed shown first)
 - Each row shows: title, difficulty badge, days overdue, link to LeetCode/NeetCode
 - **"Mark as Done"** button on each row — calls `POST /reviews`, optimistically removes from queue
@@ -298,15 +297,27 @@ Defined in `packages/shared/src/types.ts`:
 ```typescript
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
-export interface Category { id: string; name: string; slug: string; }
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export interface Problem {
-  id: string; userId: string; leetcodeId?: number;
-  title: string; url: string; difficulty: Difficulty;
-  category?: Category; isNeetcode150: boolean;
-  notes?: string; codeSnippet?: string;
-  timeComplexity?: string; spaceComplexity?: string;
-  language?: string; problemSummary?: string;
+  id: string;
+  userId: string;
+  leetcodeId?: number;
+  title: string;
+  url: string;
+  difficulty: Difficulty;
+  category?: Category;
+  isNeetcode150: boolean;
+  notes?: string;
+  codeSnippet?: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+  language?: string;
+  problemSummary?: string;
   createdAt: string;
 }
 
@@ -319,26 +330,51 @@ export interface DueProblem extends ProblemWithSchedule {
 }
 
 export interface ProblemSchedule {
-  problemId: string; reviewCount: number;
-  lastReviewedAt?: string; nextReviewAt?: string;
+  problemId: string;
+  reviewCount: number;
+  lastReviewedAt?: string;
+  nextReviewAt?: string;
 }
 
 export interface Review {
-  id: string; problemId: string; reviewedAt: string;
-  reviewCount: number; nextReviewAt: string; confidence?: string;
+  id: string;
+  problemId: string;
+  reviewedAt: string;
+  reviewCount: number;
+  nextReviewAt: string;
+  confidence?: string;
 }
 
-export interface DashboardStats { dueToday: number; completedToday: number; }
+export interface DashboardStats {
+  dueToday: number;
+  completedToday: number;
+}
 
-export interface CreateProblemBody { /* title, url, difficulty required; rest optional */ }
+export interface CreateProblemBody {
+  /* title, url, difficulty required; rest optional */
+}
 export type UpdateProblemBody = Partial<CreateProblemBody>;
-export interface MarkDoneBody { problemId: string; confidence?: string; }
-export interface MarkDoneResponse { nextReviewAt: string; reviewCount: number; }
-export interface EditReviewBody { reviewedAt: string; }
-export interface ReviewScheduleResponse {
-  reviewCount: number; lastReviewedAt: string | null; nextReviewAt: string | null;
+export interface MarkDoneBody {
+  problemId: string;
+  confidence?: string;
 }
-export interface ProblemFilters { category?: string; difficulty?: Difficulty; due?: boolean; }
+export interface MarkDoneResponse {
+  nextReviewAt: string;
+  reviewCount: number;
+}
+export interface EditReviewBody {
+  reviewedAt: string;
+}
+export interface ReviewScheduleResponse {
+  reviewCount: number;
+  lastReviewedAt: string | null;
+  nextReviewAt: string | null;
+}
+export interface ProblemFilters {
+  category?: string;
+  difficulty?: Difficulty;
+  due?: boolean;
+}
 ```
 
 ---

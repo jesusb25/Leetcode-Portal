@@ -46,6 +46,15 @@ export function ProblemLibrary() {
   const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<Difficulty | "All">("All");
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+  function toggleGroup(key: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -127,54 +136,73 @@ export function ProblemLibrary() {
         <p className="text-gray-500 dark:text-gray-400">No problems match these filters.</p>
       ) : (
         <div className="space-y-3">
-          {groups.map((group) => (
-            <details
-              key={group.key}
-              className="group rounded border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
-            >
-              <summary className="flex cursor-pointer select-none items-center justify-between gap-2 p-3 text-sm font-semibold text-gray-700 dark:text-gray-200 [&::-webkit-details-marker]:hidden">
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M6 8l4 4 4-4" />
-                  </svg>
-                  {group.name}
-                </span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                  {group.problems.length}
-                </span>
-              </summary>
-              <ul className="divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800">
-                {group.problems.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between gap-4 p-3">
-                    <div className="min-w-0">
-                      <Link
-                        to={`/problems/${p.id}`}
-                        className="font-medium text-gray-900 hover:underline dark:text-gray-100"
-                      >
-                        {p.title}
-                      </Link>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <DifficultyBadge difficulty={p.difficulty} />
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Reviewed {formatDate(p.schedule?.lastReviewedAt)} · Next{" "}
-                          {formatDate(p.schedule?.nextReviewAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ))}
+          {groups.map((group) => {
+            const isOpen = openGroups.has(group.key);
+            return (
+              <div
+                key={group.key}
+                className="rounded border border-gray-900 bg-white dark:border-gray-800 dark:bg-gray-900"
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleGroup(group.key)}
+                  onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
+                  className="flex cursor-pointer select-none items-center justify-between gap-2 p-3 text-sm font-semibold text-gray-700 dark:text-gray-200"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg
+                      className={`h-4 w-4 text-gray-400 transition-transform duration-250 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 8l4 4 4-4" />
+                    </svg>
+                    {group.name}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    {group.problems.length}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateRows: isOpen ? "1fr" : "0fr",
+                    transition: "grid-template-rows 0.25s ease",
+                  }}
+                >
+                  <div style={{ overflow: "hidden" }}>
+                    <ul className="divide-y divide-gray-900 border-t border-gray-900 dark:divide-gray-800 dark:border-gray-800">
+                      {group.problems.map((p) => (
+                        <li key={p.id} className="flex items-center justify-between gap-4 p-3">
+                          <div className="min-w-0">
+                            <Link
+                              to={`/problems/${p.id}`}
+                              className="font-medium text-gray-900 hover:underline dark:text-gray-100"
+                            >
+                              {p.title}
+                            </Link>
+                            <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <DifficultyBadge difficulty={p.difficulty} />
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                Reviewed {formatDate(p.schedule?.lastReviewedAt)} · Next{" "}
+                                {formatDate(p.schedule?.nextReviewAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

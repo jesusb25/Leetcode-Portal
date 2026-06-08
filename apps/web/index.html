@@ -8,7 +8,9 @@
       (() => {
         try {
           const theme = localStorage.getItem("leetcode-srs-theme");
-          const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+          const prefersDark = matchMedia(
+            "(prefers-color-scheme: dark)",
+          ).matches;
           if (theme === "dark" || (!theme && prefersDark)) {
             document.documentElement.classList.add("dark");
             document.documentElement.style.colorScheme = "dark";

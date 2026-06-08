@@ -4,7 +4,7 @@ import {
   intervalForReviewCount,
   shouldResetSchedule,
 } from "@repo/shared";
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { db, problems, problemSchedule, reviews } from "../db.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
@@ -47,6 +47,42 @@ async function syncScheduleFromReviews(problemId: string, userId: string): Promi
       nextReviewAt: latest.nextReviewAt,
     })
     .where(eq(problemSchedule.problemId, problemId));
+}
+
+/**
+ * Recompute the entire review chain from chronological history.
+ *
+ * Deleting or re-dating an arbitrary review can reorder the sequence or leave a gap
+ * in `review_count`. This walks the surviving reviews oldest-first, renumbering them
+ * 1..n and recomputing each `next_review_at` from its position (matching the
+ * mark-done interval progression), then syncs the schedule. Keeping the chain
+ * consistent means a problem with N reviews always behaves as if it had been marked
+ * done N times in that order.
+ */
+async function rebuildReviewChain(problemId: string, userId: string): Promise<void> {
+  const rows = await db
+    .select()
+    .from(reviews)
+    .where(and(eq(reviews.problemId, problemId), eq(reviews.userId, userId)))
+    .orderBy(asc(reviews.reviewedAt));
+
+  for (let i = 0; i < rows.length; i++) {
+    const reviewedAt = rows[i].reviewedAt ?? new Date();
+    const newCount = i + 1;
+    // `computeNextReview` takes the pre-increment count (spec §5), so position i.
+    const nextReviewAt = computeNextReview(i, reviewedAt);
+    if (
+      rows[i].reviewCount !== newCount ||
+      rows[i].nextReviewAt.getTime() !== nextReviewAt.getTime()
+    ) {
+      await db
+        .update(reviews)
+        .set({ reviewCount: newCount, nextReviewAt })
+        .where(eq(reviews.id, rows[i].id));
+    }
+  }
+
+  await syncScheduleFromReviews(problemId, userId);
 }
 
 /** Read the current schedule state for the response payload. */
@@ -190,6 +226,92 @@ reviewsRouter.patch(
       .set({ reviewedAt: reviewedDate, nextReviewAt })
       .where(eq(reviews.id, latest.id));
     await syncScheduleFromReviews(problemId, req.userId);
+
+    res.json(await scheduleState(problemId));
+  }),
+);
+
+/**
+ * GET /reviews/:problemId/log — full "marked done" history for a problem,
+ * most recent first, so the user can review and correct past entries.
+ */
+reviewsRouter.get(
+  "/:problemId/log",
+  asyncHandler(async (req, res) => {
+    const { problemId } = req.params;
+    await assertOwnedProblem(problemId, req.userId);
+
+    const rows = await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.problemId, problemId), eq(reviews.userId, req.userId)))
+      .orderBy(desc(reviews.reviewedAt));
+
+    res.json(
+      rows.map((r) => ({
+        id: r.id,
+        problemId: r.problemId,
+        reviewedAt: (r.reviewedAt ?? new Date()).toISOString(),
+        reviewCount: r.reviewCount,
+        nextReviewAt: r.nextReviewAt.toISOString(),
+      })),
+    );
+  }),
+);
+
+/** Look up a specific review owned by the user, or throw 404. */
+async function findOwnedReview(reviewId: string, problemId: string, userId: string) {
+  const [row] = await db
+    .select({ id: reviews.id })
+    .from(reviews)
+    .where(
+      and(
+        eq(reviews.id, reviewId),
+        eq(reviews.problemId, problemId),
+        eq(reviews.userId, userId),
+      ),
+    );
+  if (!row) throw new HttpError(404, "Review not found.");
+  return row;
+}
+
+/**
+ * PATCH /reviews/:problemId/log/:reviewId — change when a specific past review
+ * happened. The whole chain is rebuilt afterward so ordering and intervals stay
+ * consistent even when the edited date moves the entry within the timeline.
+ */
+reviewsRouter.patch(
+  "/:problemId/log/:reviewId",
+  asyncHandler(async (req, res) => {
+    const { problemId, reviewId } = req.params;
+    const { reviewedAt } = req.body as EditReviewBody;
+    if (!reviewedAt) throw new HttpError(400, "reviewedAt is required.");
+    const reviewedDate = new Date(reviewedAt);
+    if (Number.isNaN(reviewedDate.getTime())) throw new HttpError(400, "Invalid reviewedAt date.");
+
+    await assertOwnedProblem(problemId, req.userId);
+    await findOwnedReview(reviewId, problemId, req.userId);
+
+    await db.update(reviews).set({ reviewedAt: reviewedDate }).where(eq(reviews.id, reviewId));
+    await rebuildReviewChain(problemId, req.userId);
+
+    res.json(await scheduleState(problemId));
+  }),
+);
+
+/**
+ * DELETE /reviews/:problemId/log/:reviewId — remove a specific past review (e.g. one
+ * logged by accident). The remaining history is renumbered and rescheduled.
+ */
+reviewsRouter.delete(
+  "/:problemId/log/:reviewId",
+  asyncHandler(async (req, res) => {
+    const { problemId, reviewId } = req.params;
+    await assertOwnedProblem(problemId, req.userId);
+    await findOwnedReview(reviewId, problemId, req.userId);
+
+    await db.delete(reviews).where(eq(reviews.id, reviewId));
+    await rebuildReviewChain(problemId, req.userId);
 
     res.json(await scheduleState(problemId));
   }),

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
+import { getProblemQuestionUrl } from "../lib/neetcode";
 
 export function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -29,6 +30,13 @@ export function Dashboard() {
   useEffect(() => {
     void load();
   }, []);
+
+  // Auto-dismiss the undo toast after a few seconds.
+  useEffect(() => {
+    if (!lastDone) return;
+    const timer = setTimeout(() => setLastDone(null), 5000);
+    return () => clearTimeout(timer);
+  }, [lastDone]);
 
   async function markDone(problem: DueProblem) {
     // Optimistically remove from the queue, then sync.
@@ -71,7 +79,7 @@ export function Dashboard() {
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {lastDone && (
-        <div className="flex items-center justify-between gap-3 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <span className="text-gray-600 dark:text-gray-300">
             Marked <span className="font-medium text-gray-900 dark:text-gray-100">{lastDone.title}</span> as done.
           </span>
@@ -130,12 +138,37 @@ export function Dashboard() {
                   {group.problems.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-4 p-3">
                       <div className="min-w-0">
-                        <Link
-                          to={`/problems/${p.id}`}
-                          className="font-medium text-gray-900 hover:underline dark:text-gray-100"
-                        >
-                          {p.title}
-                        </Link>
+                        <div className="flex items-center gap-1.5">
+                          <Link
+                            to={`/problems/${p.id}`}
+                            className="font-medium text-gray-900 hover:underline dark:text-gray-100"
+                          >
+                            {p.title}
+                          </Link>
+                          <a
+                            href={getProblemQuestionUrl(p)}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Open on NeetCode"
+                            aria-label={`Open ${p.title} on NeetCode`}
+                            className="rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                              <path d="M15 3h6v6" />
+                              <path d="M10 14L21 3" />
+                            </svg>
+                          </a>
+                        </div>
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           <DifficultyBadge difficulty={p.difficulty} />
                           <span className="text-xs text-gray-500 dark:text-gray-400">

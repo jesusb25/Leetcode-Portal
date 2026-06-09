@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { api } from "../lib/api";
+import { signOut, useAuth } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 
 export function SettingsMenu() {
+  const { session } = useAuth();
   const [open, setOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   function close() {
-    if (resetting) return;
+    if (resetting || signingOut) return;
     setOpen(false);
     setConfirmReset(false);
   }
@@ -21,7 +25,7 @@ export function SettingsMenu() {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, resetting]);
+  }, [open, resetting, signingOut]);
 
   function handleOpen() {
     setOpen(true);
@@ -37,6 +41,16 @@ export function SettingsMenu() {
       window.location.reload();
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await signOut();
+      // The auth state change unmounts this tree and shows the login screen.
+    } finally {
+      setSigningOut(false);
     }
   }
 
@@ -79,7 +93,7 @@ export function SettingsMenu() {
                 </button>
               </div>
 
-              <div className="p-5">
+              <div className="space-y-4 p-5">
                 {confirmReset ? (
                   <div>
                     <p className="mb-4 text-sm text-stone-700 dark:text-gray-300">
@@ -113,6 +127,25 @@ export function SettingsMenu() {
                     <ResetIcon />
                     Reset Progress
                   </button>
+                )}
+
+                {supabase && session && (
+                  <div className="border-t border-stone-300 pt-4 dark:border-gray-700">
+                    {session.user.email && (
+                      <p className="mb-2 truncate text-xs text-stone-500 dark:text-gray-400">
+                        Signed in as {session.user.email}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      disabled={signingOut}
+                      className="flex w-full items-center gap-2.5 rounded-lg border border-stone-400 px-4 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                    >
+                      <SignOutIcon />
+                      {signingOut ? "Signing out…" : "Sign out"}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -155,6 +188,25 @@ function ResetIcon() {
     >
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
+    </svg>
+  );
+}
+
+function SignOutIcon() {
+  return (
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
     </svg>
   );
 }

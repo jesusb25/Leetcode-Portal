@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  index,
   integer,
   pgTable,
   text,
@@ -50,32 +51,53 @@ export const problems = pgTable(
       "problems_difficulty_check",
       sql`${table.difficulty} IN ('Easy', 'Medium', 'Hard')`,
     ),
+    // Every list/due/stats query filters by owner.
+    userIdIdx: index("idx_problems_user_id").on(table.userId),
   }),
 );
 
-export const reviews = pgTable("reviews", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull(),
-  problemId: uuid("problem_id")
-    .notNull()
-    .references(() => problems.id, { onDelete: "cascade" }),
-  reviewedAt: timestamp("reviewed_at", { withTimezone: true }).defaultNow(),
-  reviewCount: integer("review_count").notNull(),
-  nextReviewAt: timestamp("next_review_at", { withTimezone: true }).notNull(),
-  confidence: text("confidence"),
-});
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    problemId: uuid("problem_id")
+      .notNull()
+      .references(() => problems.id, { onDelete: "cascade" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }).defaultNow(),
+    reviewCount: integer("review_count").notNull(),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true }).notNull(),
+    confidence: text("confidence"),
+  },
+  (table) => ({
+    // Dashboard "completed today" filters by owner + reviewed_at range.
+    userReviewedAtIdx: index("idx_reviews_user_reviewed_at").on(
+      table.userId,
+      table.reviewedAt,
+    ),
+  }),
+);
 
-export const problemSchedule = pgTable("problem_schedule", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull(),
-  problemId: uuid("problem_id")
-    .notNull()
-    .unique()
-    .references(() => problems.id, { onDelete: "cascade" }),
-  reviewCount: integer("review_count").default(0),
-  lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
-  nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
-});
+export const problemSchedule = pgTable(
+  "problem_schedule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    problemId: uuid("problem_id")
+      .notNull()
+      .unique()
+      .references(() => problems.id, { onDelete: "cascade" }),
+    reviewCount: integer("review_count").default(0),
+    lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
+  },
+  (table) => ({
+    // Due/stats queries filter on next_review_at.
+    nextReviewAtIdx: index("idx_problem_schedule_next_review_at").on(
+      table.nextReviewAt,
+    ),
+  }),
+);
 
 export type CategoryRow = typeof categories.$inferSelect;
 export type ProblemRow = typeof problems.$inferSelect;

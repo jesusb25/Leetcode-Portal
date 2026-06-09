@@ -1,7 +1,9 @@
 import type { Category, Difficulty } from "@repo/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { invalidateProblemData } from "../lib/queryKeys";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
@@ -33,6 +35,7 @@ function categoryRank(slug?: string) {
 
 export function AddProblem() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -124,6 +127,8 @@ export function AddProblem() {
         leetcodeId,
         categoryId: categoryId || undefined,
       });
+      // A brand-new problem is unscheduled, so it appears in the due queue too.
+      invalidateProblemData(queryClient);
       navigate(`/problems/${created.id}`);
     } catch (err) {
       setError((err as Error).message);

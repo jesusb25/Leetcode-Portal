@@ -4,6 +4,7 @@ import type {
   ProblemWithSchedule,
   Review,
 } from "@repo/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CategoryBadge } from "../components/CategoryBadge";
@@ -11,6 +12,7 @@ import { CodeEditor } from "../components/CodeEditor";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
+import { invalidateProblemData } from "../lib/queryKeys";
 
 const CATEGORY_ORDER = [
   "arrays-hashing","two-pointers","sliding-window","stack","binary-search",
@@ -63,6 +65,7 @@ function toDateTimeLocal(iso?: string) {
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [problem, setProblem] = useState<ProblemWithSchedule | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [sortedIds, setSortedIds] = useState<string[]>([]);
@@ -162,6 +165,7 @@ export function ProblemDetail() {
       });
       setProblem(updated);
       setEditing(false);
+      invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -182,6 +186,8 @@ export function ProblemDetail() {
       });
       setProblem(updated);
       setStudyDirty(false);
+      // Confidence ("Mastered") changes whether the problem is in the due queue.
+      invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -203,6 +209,7 @@ export function ProblemDetail() {
     try {
       await api.markDone(id);
       await load();
+      invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -220,6 +227,7 @@ export function ProblemDetail() {
       await api.resetProblemProgress(id);
       setConfirmResetProgress(false);
       await load();
+      invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -236,6 +244,7 @@ export function ProblemDetail() {
       );
       setEditingReviewId(null);
       await load();
+      invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -251,6 +260,7 @@ export function ProblemDetail() {
       try {
         await api.deleteReview(id, review.id);
         await loadReviews(id);
+        invalidateProblemData(queryClient, id);
       } catch (e) {
         setError((e as Error).message);
         setReviewLog((prev) =>
@@ -268,6 +278,7 @@ export function ProblemDetail() {
     if (!id) return;
     try {
       await api.deleteProblem(id);
+      invalidateProblemData(queryClient, id);
       navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard");
     } catch (e) {
       setError((e as Error).message);

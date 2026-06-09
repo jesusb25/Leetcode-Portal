@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "./client.js";
 import { categories, problems } from "./schema.js";
 import { categoriesSeed } from "./seeds/categories.js";
@@ -12,11 +12,14 @@ export type SeedResult = {
 };
 
 /**
- * Idempotent seed (spec §8):
- *  - upsert the 18 categories by slug
- *  - insert NeetCode 150 problems, skipping any that already exist by leetcode_id
+ * Idempotent, per-user seed (spec §8):
+ *  - upsert the 18 categories by slug (categories are global / shared)
+ *  - insert the NeetCode 150 problems for `ownerUserId`, skipping any this user
+ *    already owns (matched by leetcode_id)
  *
- * Problems are owned by `ownerUserId` (DEV_USER_ID while auth is bypassed, spec §12).
+ * Problems are owned by `ownerUserId`. The "already exists" check is scoped to that
+ * user so every user gets their own copy of the 150 — a new user is seeded even when
+ * other users (e.g. the dev user) already hold the same leetcode_ids.
  */
 export async function runSeed(ownerUserId: string): Promise<SeedResult> {
   await db
@@ -31,7 +34,12 @@ export async function runSeed(ownerUserId: string): Promise<SeedResult> {
   const existing = await db
     .select({ leetcodeId: problems.leetcodeId })
     .from(problems)
-    .where(inArray(problems.leetcodeId, seedIds));
+    .where(
+      and(
+        eq(problems.userId, ownerUserId),
+        inArray(problems.leetcodeId, seedIds),
+      ),
+    );
   const existingIds = new Set(existing.map((r) => r.leetcodeId));
 
   const toInsert = neetcode150

@@ -45,7 +45,20 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
+type BootstrapResult = {
+  categoriesEnsured: number;
+  problemsInserted: number;
+  problemsSkipped: number;
+};
+
 export const api = {
+  // Account
+  // Ensures the signed-in user's library holds the NeetCode 150. Idempotent on the
+  // server, so it's safe to call on every sign-in; new users get all 150.
+  bootstrap(): Promise<BootstrapResult> {
+    return request("/me/bootstrap", { method: "POST" });
+  },
+
   // Problems
   listProblems(filters: ProblemFilters = {}): Promise<ProblemWithSchedule[]> {
     const params = new URLSearchParams();

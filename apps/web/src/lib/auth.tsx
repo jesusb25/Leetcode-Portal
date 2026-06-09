@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { api } from "./api";
 import { supabase } from "./supabase";
 
 type AuthState = {
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
       const nextUserId = next?.user.id ?? null;
       // Switching accounts (or signing out) must not leak the previous user's
       // cached problems/reviews into the new session.
@@ -46,6 +47,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setSession(next);
       setLoading(false);
+
+      // On sign-in, make sure the user's library has the NeetCode 150. The server
+      // call is idempotent (only inserts what's missing), so a first-time Google
+      // user gets all 150 while a returning user is a cheap no-op. Fires on the
+      // SIGNED_IN event only — not on session restore (INITIAL_SESSION) or token
+      // refresh — and re-fetches so the seeded problems appear immediately.
+      if (event === "SIGNED_IN" && next) {
+        api
+          .bootstrap()
+          .then(() => queryClient.invalidateQueries())
+          .catch((err) => console.error("Library bootstrap failed:", err));
+      }
     });
 
     return () => {

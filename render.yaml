@@ -16,7 +16,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @repo/api start
     healthCheckPath: /health
     envVars:
@@ -33,7 +33,7 @@ services:
   - type: web
     name: leetcode-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @repo/web build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @repo/web build
     staticPublishPath: apps/web/dist
     envVars:
       # VITE_* vars are baked in at build time. After the API deploys, set

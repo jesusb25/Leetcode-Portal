@@ -1,18 +1,31 @@
 import type { DueProblem } from "@repo/shared";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
+import { queryKeys } from "../lib/queryKeys";
 
 export function Dashboard() {
-  const [queue, setQueue] = useState<DueProblem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const {
+    data: queue = [],
+    isLoading: loading,
+    error: dueError,
+  } = useQuery({ queryKey: queryKeys.due, queryFn: () => api.due() });
+  const { data: stats } = useQuery({
+    queryKey: queryKeys.stats,
+    queryFn: () => api.stats(),
+  });
+
+  const [actionError, setActionError] = useState<string | null>(null);
+  const error = actionError ?? (dueError ? (dueError as Error).message : null);
   const [lastDone, setLastDone] = useState<DueProblem | null>(null);
-  // Total problems on today's plate (already done + still due), captured at load
-  // so the progress bar fills as the queue drains via optimistic updates.
+  // Total problems on today's plate (already done + still due), captured once per
+  // load so the progress bar fills as the queue drains via optimistic updates.
   const [dayTotal, setDayTotal] = useState(0);
+  const dayTotalInit = useRef(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
     try {
       const stored = sessionStorage.getItem("dashboard-open-groups");
@@ -36,24 +49,19 @@ export function Dashboard() {
     });
   }
 
-  async function load() {
-    setLoading(true);
-    setError(null);
-    try {
-      const [q, stats] = await Promise.all([api.due(), api.stats()]);
-      setQueue(q);
-      setDayTotal(stats.completedToday + q.length);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
     sessionStorage.setItem("problem-back-url", "/dashboard");
-    void load();
   }, []);
+
+  // Capture the day's total once both queries have loaded; progress then fills as
+  // the queue drains. `undoLastDone` resets the flag so totals re-capture after the
+  // queue is restored.
+  useEffect(() => {
+    if (stats && !loading && !dayTotalInit.current) {
+      setDayTotal(stats.completedToday + queue.length);
+      dayTotalInit.current = true;
+    }
+  }, [stats, loading, queue.length]);
 
   // Auto-dismiss the undo toast after a few seconds.
   useEffect(() => {
@@ -62,29 +70,47 @@ export function Dashboard() {
     return () => clearTimeout(timer);
   }, [lastDone]);
 
-  async function markDone(problem: DueProblem) {
-    // Optimistically remove from the queue, then sync.
-    const prev = queue;
-    setError(null);
-    setQueue((q) => q.filter((p) => p.id !== problem.id));
-    try {
-      await api.markDone(problem.id);
+  const markDoneMutation = useMutation({
+    mutationFn: (problem: DueProblem) => api.markDone(problem.id),
+    // Optimistically remove from the cached queue, then sync.
+    onMutate: async (problem) => {
+      setActionError(null);
+      await queryClient.cancelQueries({ queryKey: queryKeys.due });
+      const prev = queryClient.getQueryData<DueProblem[]>(queryKeys.due);
+      queryClient.setQueryData<DueProblem[]>(queryKeys.due, (old) =>
+        (old ?? []).filter((p) => p.id !== problem.id),
+      );
+      return { prev };
+    },
+    onError: (e, _problem, ctx) => {
+      setActionError((e as Error).message);
+      if (ctx?.prev) queryClient.setQueryData(queryKeys.due, ctx.prev);
+    },
+    onSuccess: (_data, problem) => {
       setLastDone(problem); // offer an undo
-    } catch (e) {
-      setError((e as Error).message);
-      setQueue(prev); // revert on failure
-    }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.stats });
+    },
+  });
+
+  function markDone(problem: DueProblem) {
+    markDoneMutation.mutate(problem);
   }
 
   async function undoLastDone() {
     if (!lastDone) return;
-    setError(null);
+    setActionError(null);
     try {
       await api.undoLastReview(lastDone.id);
       setLastDone(null);
-      await load(); // re-fetch so the problem reappears in the queue
+      dayTotalInit.current = false; // re-capture totals once the queue is restored
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.due }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.stats }),
+      ]);
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 

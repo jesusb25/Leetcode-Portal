@@ -71,30 +71,33 @@ scheduleRouter.get(
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
 
-    const dueRows = await db
-      .select({ id: problems.id })
-      .from(problems)
-      .leftJoin(problemSchedule, eq(problemSchedule.problemId, problems.id))
-      .where(
-        and(
-          eq(problems.userId, req.userId),
-          or(isNull(problems.confidence), ne(problems.confidence, "Mastered")),
-          or(
-            isNull(problemSchedule.nextReviewAt),
-            lte(problemSchedule.nextReviewAt, now),
+    // Run both counts concurrently so the endpoint costs one round-trip to the
+    // remote DB instead of two serial ones.
+    const [dueRows, completedRows] = await Promise.all([
+      db
+        .select({ id: problems.id })
+        .from(problems)
+        .leftJoin(problemSchedule, eq(problemSchedule.problemId, problems.id))
+        .where(
+          and(
+            eq(problems.userId, req.userId),
+            or(isNull(problems.confidence), ne(problems.confidence, "Mastered")),
+            or(
+              isNull(problemSchedule.nextReviewAt),
+              lte(problemSchedule.nextReviewAt, now),
+            ),
           ),
         ),
-      );
-
-    const completedRows = await db
-      .select({ id: reviews.id })
-      .from(reviews)
-      .where(
-        and(
-          eq(reviews.userId, req.userId),
-          gte(reviews.reviewedAt, startOfDay),
+      db
+        .select({ id: reviews.id })
+        .from(reviews)
+        .where(
+          and(
+            eq(reviews.userId, req.userId),
+            gte(reviews.reviewedAt, startOfDay),
+          ),
         ),
-      );
+    ]);
 
     const stats: DashboardStats = {
       dueToday: dueRows.length,

@@ -11,7 +11,13 @@ if (!connectionString) {
 }
 
 // `prepare: false` keeps things compatible with Supabase's transaction pooler.
-const queryClient = postgres(connectionString, { prepare: false });
+// `max`/`idle_timeout` keep a small warm pool so requests reuse connections rather
+// than re-paying the TCP+TLS handshake to the remote DB on every cold call.
+const queryClient = postgres(connectionString, {
+  prepare: false,
+  max: 10,
+  idle_timeout: 60,
+});
 
 export const db = drizzle(queryClient, { schema });
 export { schema };

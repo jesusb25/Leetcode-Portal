@@ -1,9 +1,11 @@
 import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
 import { REVIEW_INTERVALS_DAYS } from "@repo/shared";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
+import { queryKeys } from "../lib/queryKeys";
 
 const DIFFICULTIES: (Difficulty | "All")[] = ["All", "Easy", "Medium", "Hard"];
 
@@ -90,9 +92,15 @@ function formatDate(iso?: string) {
 }
 
 export function ProblemLibrary() {
-  const [problems, setProblems] = useState<ProblemWithSchedule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: problems = [],
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: queryKeys.problems,
+    queryFn: () => api.listProblems(),
+  });
+  const error = queryError ? (queryError as Error).message : null;
   const [categoryFilters, setCategoryFilters] = useState<Set<string>>(new Set());
   const [catSearch, setCatSearch] = useState("");
   const [catOpen, setCatOpen] = useState(false);
@@ -153,15 +161,6 @@ export function ProblemLibrary() {
 
   useEffect(() => {
     sessionStorage.setItem("problem-back-url", "/problems");
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    api
-      .listProblems()
-      .then(setProblems)
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
   }, []);
 
   const categories = useMemo<Category[]>(() => {

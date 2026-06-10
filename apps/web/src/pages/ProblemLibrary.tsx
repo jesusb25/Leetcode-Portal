@@ -402,11 +402,11 @@ export function ProblemLibrary() {
                   tabIndex={0}
                   onClick={() => toggleGroup(group.key)}
                   onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
-                  className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
+                  className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-4 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
                 >
                   <span className="flex items-center gap-2">
                     <svg
-                      className={`h-4 w-4 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
+                      className={`h-5 w-5 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
                       viewBox="0 0 20 20"
                       fill="none"
                       stroke="currentColor"

@@ -55,7 +55,10 @@ export function Dashboard() {
   function toggleAllGroups(keys: string[], allOpen: boolean) {
     const next = allOpen ? new Set<string>() : new Set(keys);
     try {
-      sessionStorage.setItem("dashboard-open-groups", JSON.stringify([...next]));
+      sessionStorage.setItem(
+        "dashboard-open-groups",
+        JSON.stringify([...next]),
+      );
     } catch {}
     setOpenGroups(next);
   }
@@ -266,9 +269,7 @@ export function Dashboard() {
               {!needle && (
                 <CollapseAllButton
                   allOpen={allGroupsOpen}
-                  onClick={() =>
-                    toggleAllGroups(groupKeys, allGroupsOpen)
-                  }
+                  onClick={() => toggleAllGroups(groupKeys, allGroupsOpen)}
                 />
               )}
               <div className="relative w-64">
@@ -304,7 +305,9 @@ export function Dashboard() {
                 className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
               >
                 <div className="flex items-center justify-between px-4 py-3">
-                  <div className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
+                  <div
+                    className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`}
+                  />
                   <div className="h-5 w-8 animate-pulse rounded-full bg-stone-200 dark:bg-gray-700" />
                 </div>
               </div>
@@ -400,11 +403,11 @@ export function Dashboard() {
                         ? toggleGroup(group.key)
                         : undefined
                     }
-                    className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
+                    className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-2 py-2 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
                   >
                     <span className="flex items-center gap-2">
                       <svg
-                        className={`h-4 w-4 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-5 w-5 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
                         viewBox="0 0 20 20"
                         fill="none"
                         stroke="currentColor"

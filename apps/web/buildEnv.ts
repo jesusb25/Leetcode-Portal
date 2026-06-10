@@ -20,8 +20,8 @@ export function assertRequiredBuildEnv(
         "The app would silently fall back to http://localhost:3001/api/v1 and",
         "ship a deploy that can't reach the API.",
         "",
-        "Set VITE_API_URL in your deploy environment (e.g. the Vercel/Netlify",
-        "project env vars) or in apps/web/.env, then rebuild.",
+        "Set VITE_API_URL on the leetcode-web service (render.yaml envVars, or",
+        "the Render dashboard) or in apps/web/.env, then rebuild.",
         "",
       ].join("\n"),
     );

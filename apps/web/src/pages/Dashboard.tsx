@@ -389,7 +389,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+                  className="overflow-hidden rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -400,11 +400,11 @@ export function Dashboard() {
                         ? toggleGroup(group.key)
                         : undefined
                     }
-                    className="flex cursor-pointer select-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-stone-700 dark:text-gray-200"
+                    className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
                   >
                     <span className="flex items-center gap-2">
                       <svg
-                        className={`h-4 w-4 text-stone-400 transition-transform duration-200 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-4 w-4 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
                         viewBox="0 0 20 20"
                         fill="none"
                         stroke="currentColor"
@@ -417,7 +417,7 @@ export function Dashboard() {
                       </svg>
                       {group.name}
                     </span>
-                    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-500 dark:bg-gray-800 dark:text-gray-400">
+                    <span className="rounded-full bg-stone-200/80 px-2 py-0.5 text-xs font-semibold text-stone-600 dark:bg-gray-700 dark:text-gray-300">
                       {group.problems.length}
                     </span>
                   </div>

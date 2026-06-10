@@ -336,18 +336,17 @@ export function ProblemLibrary() {
               onClick={() => toggleAllGroups(groupKeys, allGroupsOpen)}
             />
           )}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              title="Clear filters"
-              className="flex h-9 w-9 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            title="Clear filters"
+            className="flex h-9 w-9 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-400 disabled:hover:bg-white disabled:hover:text-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:disabled:hover:border-gray-600 dark:disabled:hover:bg-gray-900 dark:disabled:hover:text-gray-400"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -396,18 +395,18 @@ export function ProblemLibrary() {
             return (
               <div
                 key={group.key}
-                className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+                className="overflow-hidden rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
               >
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={() => toggleGroup(group.key)}
                   onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
-                  className="flex cursor-pointer select-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-stone-700 dark:text-gray-200"
+                  className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-3 text-xs font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
                 >
                   <span className="flex items-center gap-2">
                     <svg
-                      className={`h-4 w-4 text-stone-400 transition-transform duration-200 dark:text-gray-500 ${isOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 text-stone-600 transition-transform duration-200 dark:text-gray-300 ${isOpen ? "rotate-180" : ""}`}
                       viewBox="0 0 20 20"
                       fill="none"
                       stroke="currentColor"
@@ -420,7 +419,7 @@ export function ProblemLibrary() {
                     </svg>
                     {group.name}
                   </span>
-                  <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-500 dark:bg-gray-800 dark:text-gray-400">
+                  <span className="rounded-full bg-stone-200/80 px-2 py-0.5 text-xs font-semibold text-stone-600 dark:bg-gray-700 dark:text-gray-300">
                     {group.problems.length}
                   </span>
                 </div>

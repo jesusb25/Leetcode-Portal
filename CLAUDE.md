@@ -44,4 +44,16 @@ complete until the relevant checks below pass — if a check fails, fix it or sa
 - `pnpm --filter <pkg> <script>` — scope to one package (`@repo/web`, `@repo/api`, `@repo/shared`, `@repo/db`).
 - `pnpm test` from inside `apps/web`, `apps/api`, or `packages/shared` runs that package's vitest.
 
+### `packages/db` operational scripts
+
+Run with `pnpm --filter @repo/db <script>`:
+
+- `db:dev-user` — ensure the dev user (`DEV_USER_ID`) exists in `auth.users`.
+- `db:seed` — seed the NeetCode 150 for the dev user (per-user, idempotent).
+- `db:reset-user <email-or-id>` — wipe one account's problems (cascading reviews +
+  schedule, including any custom problems) and re-seed a fresh NeetCode 150. Accepts a
+  raw user id or an email (looked up in `auth.users`, case-sensitive). Destructive.
+- `db:migrate` / `db:rls` — apply migrations. DDL must go through the **direct 5432**
+  connection, not the 6543 pooler (it can report success without committing DDL).
+
 Note: `lint` and `typecheck` are both `tsc --noEmit` — type errors are lint errors here.

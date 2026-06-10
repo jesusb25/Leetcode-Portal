@@ -46,15 +46,20 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 type BootstrapResult = {
-  categoriesEnsured: number;
-  problemsInserted: number;
-  problemsSkipped: number;
+  // True only on the first call for a user (when the 150 were actually seeded).
+  seeded: boolean;
+  result?: {
+    categoriesEnsured: number;
+    problemsInserted: number;
+    problemsSkipped: number;
+  };
 };
 
 export const api = {
   // Account
-  // Ensures the signed-in user's library holds the NeetCode 150. Idempotent on the
-  // server, so it's safe to call on every sign-in; new users get all 150.
+  // Provisions the signed-in user's library with the NeetCode 150. The seed runs
+  // exactly once (at account creation); later sign-ins are a cheap no-op that
+  // returns { seeded: false }. Safe to call on every sign-in.
   bootstrap(): Promise<BootstrapResult> {
     return request("/me/bootstrap", { method: "POST" });
   },

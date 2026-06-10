@@ -1,21 +1,14 @@
 import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
-import { REVIEW_INTERVALS_DAYS } from "@repo/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
+import type { ProblemStatus } from "../lib/problemStatus";
+import { problemStatus } from "../lib/problemStatus";
 import { queryKeys } from "../lib/queryKeys";
 
 const DIFFICULTIES: (Difficulty | "All")[] = ["All", "Easy", "Medium", "Hard"];
-
-/**
- * A problem's progress, derived from its spaced-repetition schedule:
- *   • "new"       — never reviewed (no schedule / reviewCount 0)
- *   • "attempted" — reviewed at least once but not yet at the longest interval
- *   • "mastered"  — graduated to the final review interval (the 30-day step)
- */
-type ProblemStatus = "new" | "attempted" | "mastered";
 
 const STATUSES: { value: ProblemStatus | "All"; label: string }[] = [
   { value: "All", label: "All" },
@@ -23,15 +16,6 @@ const STATUSES: { value: ProblemStatus | "All"; label: string }[] = [
   { value: "attempted", label: "Attempted" },
   { value: "mastered", label: "Mastered" },
 ];
-
-const MASTERED_REVIEW_COUNT = REVIEW_INTERVALS_DAYS.length;
-
-function problemStatus(p: ProblemWithSchedule): ProblemStatus {
-  const count = p.schedule?.reviewCount ?? 0;
-  if (count >= MASTERED_REVIEW_COUNT) return "mastered";
-  if (count >= 1) return "attempted";
-  return "new";
-}
 
 const STATUS_STYLES: Record<ProblemStatus, { label: string; cls: string }> = {
   new: {
@@ -184,7 +168,10 @@ export function ProblemLibrary() {
     .sort((a, b) => {
       const byCategory = categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
       if (byCategory !== 0) return byCategory;
-      return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+      const byDifficulty = DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+      if (byDifficulty !== 0) return byDifficulty;
+      // Stable tiebreaker by title so ordering never depends on DB/attempted state.
+      return a.title.localeCompare(b.title);
     });
 
   const groups = groupByCategory(filtered);

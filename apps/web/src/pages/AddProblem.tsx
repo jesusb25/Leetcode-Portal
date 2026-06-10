@@ -1,9 +1,9 @@
 import type { Category, Difficulty } from "@repo/shared";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
-import { invalidateProblemData } from "../lib/queryKeys";
+import { invalidateProblemData, queryKeys } from "../lib/queryKeys";
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
@@ -33,6 +33,16 @@ function categoryRank(slug?: string) {
   return i === -1 ? CATEGORY_ORDER.length + 1 : i;
 }
 
+/** Case-insensitive comparison key for a problem title. */
+function titleKey(s: string) {
+  return s.trim().toLowerCase();
+}
+
+/** Comparison key for a problem URL — ignores case and a trailing slash. */
+function urlKey(s: string) {
+  return s.trim().toLowerCase().replace(/\/+$/, "");
+}
+
 export function AddProblem() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -54,6 +64,31 @@ export function AddProblem() {
   const [fetching, setFetching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Existing library, used to block duplicate names/links before submitting.
+  const { data: existingProblems = [] } = useQuery({
+    queryKey: queryKeys.problems,
+    queryFn: () => api.listProblems(),
+  });
+
+  const duplicateTitle = useMemo(() => {
+    const key = titleKey(title);
+    return key.length > 0 && existingProblems.some((p) => titleKey(p.title) === key);
+  }, [title, existingProblems]);
+
+  const duplicateUrl = useMemo(() => {
+    const key = urlKey(url);
+    return key.length > 0 && existingProblems.some((p) => urlKey(p.url) === key);
+  }, [url, existingProblems]);
+
+  const duplicateMessage =
+    duplicateTitle && duplicateUrl
+      ? "A problem with this name and link is already in your library."
+      : duplicateUrl
+        ? "A problem with this link is already in your library."
+        : duplicateTitle
+          ? "A problem with this name is already in your library."
+          : null;
 
   useEffect(() => {
     api
@@ -117,6 +152,11 @@ export function AddProblem() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Guard against duplicates even if the disabled button is bypassed.
+    if (duplicateTitle || duplicateUrl) {
+      setError(duplicateMessage);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -136,8 +176,10 @@ export function AddProblem() {
     }
   }
 
-  const inputCls =
-    "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
+  const inputBase =
+    "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 dark:bg-gray-900 dark:text-gray-100";
+  const inputCls = `${inputBase} border-stone-400 focus:ring-stone-300 dark:border-gray-600`;
+  const inputErrorCls = `${inputBase} border-red-500 focus:ring-red-300 dark:border-red-500`;
 
   return (
     <div className="max-w-xl space-y-5">
@@ -154,7 +196,13 @@ export function AddProblem() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://neetcode.io/problems/two-integer-sum"
-            className={inputCls}
+            className={duplicateUrl ? inputErrorCls : inputCls}
+            aria-invalid={duplicateUrl}
+            title={
+              duplicateUrl
+                ? "A problem with this link is already in your library."
+                : undefined
+            }
           />
           <button
             type="button"
@@ -165,6 +213,11 @@ export function AddProblem() {
             {fetching ? "Fetching…" : "Fetch"}
           </button>
         </div>
+        {duplicateUrl && (
+          <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+            A problem with this link is already in your library.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -180,8 +233,19 @@ export function AddProblem() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className={inputCls}
+            className={duplicateTitle ? inputErrorCls : inputCls}
+            aria-invalid={duplicateTitle}
+            title={
+              duplicateTitle
+                ? "A problem with this name is already in your library."
+                : undefined
+            }
           />
+          {duplicateTitle && (
+            <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+              A problem with this name is already in your library.
+            </p>
+          )}
         </div>
 
         <div>
@@ -274,13 +338,23 @@ export function AddProblem() {
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
-        >
-          {submitting ? "Saving…" : "Save Problem"}
-        </button>
+        <div className="group relative inline-block">
+          <button
+            type="submit"
+            disabled={submitting || duplicateTitle || duplicateUrl}
+            className="rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+          >
+            {submitting ? "Saving…" : "Save Problem"}
+          </button>
+          {duplicateMessage && (
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute bottom-full left-0 mb-2 w-max max-w-xs rounded bg-stone-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-gray-700"
+            >
+              {duplicateMessage}
+            </span>
+          )}
+        </div>
       </form>
     </div>
   );

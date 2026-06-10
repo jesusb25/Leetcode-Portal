@@ -1,4 +1,5 @@
 import type { DueProblem } from "@repo/shared";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -31,10 +32,17 @@ const dueProblem: DueProblem = {
 };
 
 function renderDashboard() {
+  // Fresh client per render so cached queries don't bleed across tests; retries
+  // off so a rejected query surfaces immediately instead of stalling the test.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MemoryRouter>
-      <Dashboard />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

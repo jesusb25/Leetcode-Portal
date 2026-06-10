@@ -2,6 +2,7 @@ import type { Category, Difficulty, ProblemWithSchedule } from "@repo/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { CollapseAllButton } from "../components/CollapseAllButton";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import type { ProblemStatus } from "../lib/problemStatus";
@@ -114,6 +115,16 @@ export function ProblemLibrary() {
     });
   }
 
+  // Open every category dropdown at once, or collapse them all when they're
+  // already open.
+  function toggleAllGroups(keys: string[], allOpen: boolean) {
+    const next = allOpen ? new Set<string>() : new Set(keys);
+    try {
+      sessionStorage.setItem("library-open-groups", JSON.stringify([...next]));
+    } catch {}
+    setOpenGroups(next);
+  }
+
   const hasActiveFilters =
     searchQuery !== "" || categoryFilters.size > 0 || difficultyFilter !== "All" || statusFilter !== "All";
 
@@ -176,6 +187,9 @@ export function ProblemLibrary() {
 
   const groups = groupByCategory(filtered);
   const effectiveOpenGroups = searchQuery ? new Set(groups.map((g) => g.key)) : openGroups;
+  const groupKeys = groups.map((g) => g.key);
+  const allGroupsOpen =
+    groupKeys.length > 0 && groupKeys.every((k) => openGroups.has(k));
 
   return (
     <div className="space-y-5">
@@ -315,18 +329,26 @@ export function ProblemLibrary() {
           </div>
         </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            title="Clear filters"
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {groups.length > 0 && !searchQuery && (
+            <CollapseAllButton
+              allOpen={allGroupsOpen}
+              onClick={() => toggleAllGroups(groupKeys, allGroupsOpen)}
+            />
+          )}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              title="Clear filters"
+              className="flex h-9 w-9 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}

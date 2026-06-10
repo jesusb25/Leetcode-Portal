@@ -24,7 +24,7 @@ services:
         value: production
       - key: DATABASE_URL # Supabase connection string (app runtime can use pooler port 6543)
         sync: false
-      - key: SUPABASE_JWT_SECRET
+      - key: SUPABASE_URL # Supabase project URL; used to build the JWKS URL for verifying access tokens
         sync: false
       - key: DEV_USER_ID
         sync: false

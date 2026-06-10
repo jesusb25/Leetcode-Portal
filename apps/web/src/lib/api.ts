@@ -13,6 +13,8 @@ import type {
 } from "@repo/shared";
 import { supabase } from "./supabase";
 
+// The localhost fallback only applies to local `vite dev`; production builds
+// require VITE_API_URL (enforced by the require-build-env guard in vite.config.ts).
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001/api/v1";
 
 async function authHeader(): Promise<Record<string, string>> {

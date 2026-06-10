@@ -188,11 +188,13 @@ export function AddProblem() {
       </h1>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+        <label htmlFor="add-url" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
           URL
         </label>
         <div className="flex gap-2">
           <input
+            id="add-url"
+            name="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://neetcode.io/problems/two-integer-sum"
@@ -226,10 +228,12 @@ export function AddProblem() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+          <label htmlFor="add-title" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
             Title
           </label>
           <input
+            id="add-title"
+            name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -249,10 +253,12 @@ export function AddProblem() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+          <label htmlFor="add-difficulty" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
             Difficulty
           </label>
           <select
+            id="add-difficulty"
+            name="difficulty"
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value as Difficulty)}
             className={inputCls}
@@ -266,11 +272,13 @@ export function AddProblem() {
         </div>
 
         <div ref={comboRef} className="relative">
-          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
+          <label htmlFor="add-category" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">
             Category
           </label>
           <div className="relative">
             <input
+              id="add-category"
+              name="category"
               value={categorySearch}
               onChange={(e) => {
                 setCategorySearch(e.target.value);

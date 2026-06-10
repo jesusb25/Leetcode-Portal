@@ -288,6 +288,8 @@ export function Dashboard() {
                 </svg>
                 <input
                   type="search"
+                  id="queue-search"
+                  name="queue-search"
                   placeholder="Search due problems…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

@@ -26,8 +26,8 @@ services:
         sync: false
       - key: SUPABASE_URL # Supabase project URL; used to build the JWKS URL for verifying access tokens
         sync: false
-      - key: CORS_ORIGIN # Allowed browser origin(s) for the API, comma-separated. Set to https://<your-web>.onrender.com
-        sync: false
+      - key: CORS_ORIGIN # Allowed browser origin(s) for the API, comma-separated. No trailing slash (exact-match check).
+        value: https://leetcode-web.onrender.com
 
   # ---------- Web: Vite SPA (static) ----------
   - type: web
@@ -36,10 +36,10 @@ services:
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @repo/web build
     staticPublishPath: apps/web/dist
     envVars:
-      # VITE_* vars are baked in at build time. After the API deploys, set
-      # VITE_API_URL to https://<your-api>.onrender.com/api/v1 and redeploy.
+      # VITE_* vars are baked in at build time. Changing this requires a
+      # rebuild (Clear build cache & deploy), not just a restart.
       - key: VITE_API_URL
-        sync: false
+        value: https://leetcode-api-9kz7.onrender.com/api/v1
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY

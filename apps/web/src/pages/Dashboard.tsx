@@ -2,6 +2,7 @@ import type { DueProblem } from "@repo/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { CollapseAllButton } from "../components/CollapseAllButton";
 import { DifficultyBadge } from "../components/DifficultyBadge";
 import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
@@ -47,6 +48,16 @@ export function Dashboard() {
       } catch {}
       return next;
     });
+  }
+
+  // Open every category dropdown at once, or collapse them all when they're
+  // already open.
+  function toggleAllGroups(keys: string[], allOpen: boolean) {
+    const next = allOpen ? new Set<string>() : new Set(keys);
+    try {
+      sessionStorage.setItem("dashboard-open-groups", JSON.stringify([...next]));
+    } catch {}
+    setOpenGroups(next);
   }
 
   useEffect(() => {
@@ -118,6 +129,9 @@ export function Dashboard() {
 
   const groups = groupByCategory(queue);
   const upNext = groups[0]?.problems[0] ?? null;
+  const groupKeys = groups.map((g) => g.key);
+  const allGroupsOpen =
+    groupKeys.length > 0 && groupKeys.every((k) => openGroups.has(k));
 
   const progress = dayTotal > 0 ? (dayTotal - queue.length) / dayTotal : 0;
 
@@ -248,27 +262,37 @@ export function Dashboard() {
           </h2>
           <ProgressBar value={progress} className="w-1/3" />
           {!loading && queue.length > 0 && (
-            <div className="relative ml-auto w-64">
-              <svg
-                className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                type="search"
-                placeholder="Search due problems…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-stone-400 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
-              />
+            <div className="ml-auto flex items-center gap-2">
+              {!needle && (
+                <CollapseAllButton
+                  allOpen={allGroupsOpen}
+                  onClick={() =>
+                    toggleAllGroups(groupKeys, allGroupsOpen)
+                  }
+                />
+              )}
+              <div className="relative w-64">
+                <svg
+                  className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="Search due problems…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-lg border border-stone-400 py-1.5 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                />
+              </div>
             </div>
           )}
         </div>

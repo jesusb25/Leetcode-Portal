@@ -176,12 +176,17 @@ export function ProblemDetail() {
         ),
       )
       .catch(() => setCategories([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Fetch the navigation order once on mount only — re-fetching on every id change
+  // would re-sort mid-session (e.g. after marking a problem Mastered) and break prev/next.
+  useEffect(() => {
     api
       .listProblems()
       .then((all) => setSortedIds(sortedProblemsOrder(all).map((p) => p.id)))
       .catch(() => setSortedIds([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, []);
 
   useEffect(() => () => clearUndoTimer(), []);
 
@@ -261,7 +266,7 @@ export function ProblemDetail() {
   useEffect(() => {
     if (!studyDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => void saveStudyNotes(), 1500);
+    autoSaveTimer.current = setTimeout(() => void saveStudyNotesRef.current(), 1500);
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
@@ -419,7 +424,7 @@ export function ProblemDetail() {
           </div>
         </div>
         {/* metadata bar */}
-        <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-white px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-stone-50 px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           {(["w-20", "w-14", "w-20", "w-28", "w-24"] as const).map((w) => (
             <div
               key={w}
@@ -429,14 +434,14 @@ export function ProblemDetail() {
         </div>
         {/* approach + complexity */}
         <div className="flex flex-col gap-4 sm:flex-row">
-          <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <div className="h-3 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
               <div className="h-6 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             </div>
             <div className="h-60 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
           </div>
-          <div className="w-full shrink-0 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900 sm:w-52">
+          <div className="w-full shrink-0 space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900 sm:w-52">
             <div className="h-3 w-20 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
@@ -444,7 +449,7 @@ export function ProblemDetail() {
           </div>
         </div>
         {/* personal notes */}
-        <div className="space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <div className="space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <div className="h-3 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
           <div className="h-28 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
         </div>
@@ -470,7 +475,7 @@ export function ProblemDetail() {
   const inputCls =
     "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
   const sectionCls =
-    "space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900";
+    "space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900";
   const sectionHeadCls =
     "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-200";
 
@@ -654,7 +659,7 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-stone-400 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="rounded border border-stone-400 bg-stone-50 px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
@@ -861,7 +866,7 @@ export function ProblemDetail() {
                 Not reviewed yet. Click "Mark as Done" to log your first review.
               </p>
             ) : (
-              <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+              <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
                 {reviewLog.map((r) => (
                   <li
                     key={r.id}
@@ -941,7 +946,7 @@ export function ProblemDetail() {
           onClick={() => setConfirmDeleteOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-stone-300 bg-white p-6 shadow-2xl dark:border-gray-600 dark:bg-gray-900"
+            className="w-full max-w-sm rounded-2xl border border-stone-300 bg-stone-50 p-6 shadow-2xl dark:border-gray-600 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">

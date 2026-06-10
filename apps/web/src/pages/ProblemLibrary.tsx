@@ -395,14 +395,14 @@ export function ProblemLibrary() {
             return (
               <div
                 key={group.key}
-                className="overflow-hidden rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+                className="overflow-hidden rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
               >
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={() => toggleGroup(group.key)}
                   onKeyDown={(e) => e.key === "Enter" || e.key === " " ? toggleGroup(group.key) : undefined}
-                  className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-4 py-4 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
+                  className="flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-2 py-2 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100"
                 >
                   <span className="flex items-center gap-2">
                     <svg
@@ -431,7 +431,7 @@ export function ProblemLibrary() {
                   }}
                 >
                   <div style={{ overflow: "hidden" }}>
-                    <ul className="divide-y divide-stone-400 border-t border-stone-400 dark:divide-gray-600 dark:border-gray-600">
+                    <ul className="divide-y divide-black border-t-2 border-black dark:divide-gray-600 dark:border-gray-600">
                       {group.problems.map((p) => (
                         <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3">
                           <div className="min-w-0">

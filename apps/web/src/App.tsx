@@ -36,7 +36,7 @@ function AppRoutes() {
       <Routes>
         {/* Public — reachable without a session. The homepage and a public
             privacy policy are prerequisites for Google OAuth verification. */}
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<LandingOrApp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/privacy" element={<Privacy />} />
 
@@ -54,6 +54,13 @@ function AppRoutes() {
       </Routes>
     </Router>
   );
+}
+
+function LandingOrApp() {
+  const { session, loading } = useAuth();
+  if (supabase && loading) return <FullScreenSpinner />;
+  if (session) return <Navigate to="/dashboard" replace />;
+  return <Landing />;
 }
 
 // Gate for the app's protected routes. When Supabase is configured we require a

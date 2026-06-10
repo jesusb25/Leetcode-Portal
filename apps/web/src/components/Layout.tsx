@@ -11,7 +11,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   `block rounded px-3 py-2 text-sm font-medium ${
     isActive
       ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
-      : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+      : "text-stone-900 hover:bg-stone-100 hover:text-stone-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
   }`;
 
 export function Layout() {

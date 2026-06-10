@@ -15,19 +15,40 @@ import { getProblemQuestionUrl } from "../lib/neetcode";
 import { invalidateProblemData } from "../lib/queryKeys";
 
 const CATEGORY_ORDER = [
-  "arrays-hashing","two-pointers","sliding-window","stack","binary-search",
-  "linked-list","trees","heap-priority-queue","backtracking","tries","graphs",
-  "advanced-graphs","1d-dynamic-programming","2d-dynamic-programming","greedy",
-  "intervals","math-geometry","bit-manipulation",
+  "arrays-hashing",
+  "two-pointers",
+  "sliding-window",
+  "stack",
+  "binary-search",
+  "linked-list",
+  "trees",
+  "heap-priority-queue",
+  "backtracking",
+  "tries",
+  "graphs",
+  "advanced-graphs",
+  "1d-dynamic-programming",
+  "2d-dynamic-programming",
+  "greedy",
+  "intervals",
+  "math-geometry",
+  "bit-manipulation",
 ];
-const DIFFICULTY_ORDER: Record<Difficulty, number> = { Easy: 0, Medium: 1, Hard: 2 };
+const DIFFICULTY_ORDER: Record<Difficulty, number> = {
+  Easy: 0,
+  Medium: 1,
+  Hard: 2,
+};
 function categoryRank(slug?: string) {
   const i = slug ? CATEGORY_ORDER.indexOf(slug) : -1;
   return i === -1 ? CATEGORY_ORDER.length + 1 : i;
 }
-function sortedProblemsOrder(problems: ProblemWithSchedule[]): ProblemWithSchedule[] {
+function sortedProblemsOrder(
+  problems: ProblemWithSchedule[],
+): ProblemWithSchedule[] {
   return [...problems].sort((a, b) => {
-    const byCategory = categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
+    const byCategory =
+      categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
     if (byCategory !== 0) return byCategory;
     return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
   });
@@ -61,7 +82,6 @@ function toDateTimeLocal(iso?: string) {
   return local.toISOString().slice(0, 16);
 }
 
-
 export function ProblemDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -87,9 +107,12 @@ export function ProblemDetail() {
   const [confidence, setConfidence] = useState("");
   const [notes, setNotes] = useState("");
   const [studyDirty, setStudyDirty] = useState(false);
+  const [studySaving, setStudySaving] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const studyDirtyRef = useRef(false);
-  const saveStudyNotesRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const saveStudyNotesRef = useRef<() => Promise<void>>(() =>
+    Promise.resolve(),
+  );
 
   // --- Review log ---
   const [reviewLog, setReviewLog] = useState<Review[]>([]);
@@ -99,7 +122,10 @@ export function ProblemDetail() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // --- Undo toast ---
-  const [undoToast, setUndoToast] = useState<{ type: "review"; review: Review } | null>(null);
+  const [undoToast, setUndoToast] = useState<{
+    type: "review";
+    review: Review;
+  } | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function clearUndoTimer() {
@@ -144,7 +170,11 @@ export function ProblemDetail() {
     void load();
     api
       .categories()
-      .then((cats) => setCategories([...cats].sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug))))
+      .then((cats) =>
+        setCategories(
+          [...cats].sort((a, b) => categoryRank(a.slug) - categoryRank(b.slug)),
+        ),
+      )
       .catch(() => setCategories([]));
     api
       .listProblems()
@@ -176,6 +206,7 @@ export function ProblemDetail() {
   async function saveStudyNotes() {
     if (!id) return;
     setError(null);
+    setStudySaving(true);
     try {
       const updated = await api.updateProblem(id, {
         problemSummary: problemSummary || undefined,
@@ -193,6 +224,8 @@ export function ProblemDetail() {
       invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setStudySaving(false);
     }
   }
 
@@ -204,7 +237,16 @@ export function ProblemDetail() {
   useEffect(() => {
     saveStudyNotesRef.current = saveStudyNotes;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, problemSummary, codeSnippet, language, timeComplexity, spaceComplexity, confidence, notes]);
+  }, [
+    id,
+    problemSummary,
+    codeSnippet,
+    language,
+    timeComplexity,
+    spaceComplexity,
+    confidence,
+    notes,
+  ]);
 
   // Flush any pending save when navigating away.
   useEffect(() => {
@@ -224,7 +266,16 @@ export function ProblemDetail() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studyDirty, problemSummary, codeSnippet, language, timeComplexity, spaceComplexity, confidence, notes]);
+  }, [
+    studyDirty,
+    problemSummary,
+    codeSnippet,
+    language,
+    timeComplexity,
+    spaceComplexity,
+    confidence,
+    notes,
+  ]);
 
   async function markDone() {
     if (!id) return;
@@ -331,7 +382,6 @@ export function ProblemDetail() {
     setUndoToast(null);
   }
 
-
   function markStudyDirty<T>(setter: (v: T) => void) {
     return (v: T) => {
       setter(v);
@@ -371,7 +421,10 @@ export function ProblemDetail() {
         {/* metadata bar */}
         <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-white px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           {(["w-20", "w-14", "w-20", "w-28", "w-24"] as const).map((w) => (
-            <div key={w} className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
+            <div
+              key={w}
+              className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`}
+            />
           ))}
         </div>
         {/* approach + complexity */}
@@ -409,7 +462,10 @@ export function ProblemDetail() {
 
   const currentIdx = id ? sortedIds.indexOf(id) : -1;
   const prevId = currentIdx > 0 ? sortedIds[currentIdx - 1] : null;
-  const nextId = currentIdx !== -1 && currentIdx < sortedIds.length - 1 ? sortedIds[currentIdx + 1] : null;
+  const nextId =
+    currentIdx !== -1 && currentIdx < sortedIds.length - 1
+      ? sortedIds[currentIdx + 1]
+      : null;
 
   const inputCls =
     "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
@@ -422,7 +478,9 @@ export function ProblemDetail() {
     <div className="mx-auto w-3/4 space-y-5 pb-32">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard")}
+          onClick={() =>
+            navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard")
+          }
           className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
           ← Back
@@ -457,9 +515,16 @@ export function ProblemDetail() {
       {editing ? (
         /* ── Metadata edit form ── */
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">Edit Problem</h1>
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
+            Edit Problem
+          </h1>
           <div>
-            <label htmlFor="edit-title" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Title</label>
+            <label
+              htmlFor="edit-title"
+              className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200"
+            >
+              Title
+            </label>
             <input
               id="edit-title"
               name="title"
@@ -469,7 +534,12 @@ export function ProblemDetail() {
             />
           </div>
           <div>
-            <label htmlFor="edit-url" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">URL</label>
+            <label
+              htmlFor="edit-url"
+              className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200"
+            >
+              URL
+            </label>
             <input
               id="edit-url"
               name="url"
@@ -479,7 +549,12 @@ export function ProblemDetail() {
             />
           </div>
           <div>
-            <label htmlFor="edit-difficulty" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Difficulty</label>
+            <label
+              htmlFor="edit-difficulty"
+              className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200"
+            >
+              Difficulty
+            </label>
             <select
               id="edit-difficulty"
               name="difficulty"
@@ -495,7 +570,12 @@ export function ProblemDetail() {
             </select>
           </div>
           <div>
-            <label htmlFor="edit-category" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
+            <label
+              htmlFor="edit-category"
+              className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200"
+            >
+              Category
+            </label>
             <select
               id="edit-category"
               name="category"
@@ -531,7 +611,34 @@ export function ProblemDetail() {
           {/* ── Header ── */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">{problem.title}</h1>
+              <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
+                  {problem.title}
+                </h1>
+                <a
+                  href={questionUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={questionLinkLabel}
+                  aria-label={`Open ${problem.title} externally`}
+                  className="rounded p-1 text-stone-400 hover:text-stone-700 dark:hover:text-gray-200"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14L21 3" />
+                  </svg>
+                </a>
+              </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <DifficultyBadge difficulty={problem.difficulty} />
                 {problem.category && (
@@ -560,41 +667,35 @@ export function ProblemDetail() {
             </div>
           </div>
 
-          {/* ── Compact metadata bar ── */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-stone-400 bg-white px-4 py-3 text-sm shadow-sm dark:border-gray-600 dark:bg-gray-900">
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-              <MetaChip label="URL">
-                <a
-                  href={questionUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-indigo-600 hover:underline dark:text-indigo-400"
-                >
-                  {questionLinkLabel}
-                </a>
-              </MetaChip>
-              <MetaChip label="LC #">{problem.leetcodeId ?? "—"}</MetaChip>
-            </div>
-            <div className="hidden h-5 w-px self-center bg-stone-200 dark:bg-gray-700 sm:block" />
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-              <MetaChip label="Reviews">
-                {problem.schedule?.reviewCount ?? 0}
-              </MetaChip>
-              <MetaChip label="Last reviewed">
-                {formatDate(problem.schedule?.lastReviewedAt)}
-              </MetaChip>
-              <MetaChip label="Next review">
-                {formatDate(problem.schedule?.nextReviewAt)}
-              </MetaChip>
-            </div>
-          </div>
-
           {/* ── Approach + Complexity ── */}
           <div className="flex flex-col gap-4 sm:flex-row">
             {/* Approach (code / notes) on the left */}
             <div className={`${sectionCls} min-w-0 flex-1`}>
               <div className="flex items-center justify-between gap-3">
-                <p className={sectionHeadCls}>Approach</p>
+                <div className="flex items-center gap-2">
+                  <p className={sectionHeadCls}>Approach</p>
+                  {studySaving && (
+                    <svg
+                      className="h-3.5 w-3.5 animate-spin text-stone-400 dark:text-gray-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      />
+                    </svg>
+                  )}
+                </div>
                 <select
                   value={language}
                   onChange={(e) => markStudyDirty(setLanguage)(e.target.value)}
@@ -616,10 +717,13 @@ export function ProblemDetail() {
             </div>
 
             {/* Complexity box on the right */}
-            <div className={`${sectionCls} w-full shrink-0 sm:w-52`}>
+            <div className={`${sectionCls} flex w-full shrink-0 flex-col sm:w-52`}>
               <p className={sectionHeadCls}>Complexity</p>
               <div>
-                <label htmlFor="complexity-time" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label
+                  htmlFor="complexity-time"
+                  className="mb-1 block text-xs text-stone-500 dark:text-gray-400"
+                >
                   Time
                 </label>
                 <textarea
@@ -643,7 +747,10 @@ export function ProblemDetail() {
                 />
               </div>
               <div>
-                <label htmlFor="complexity-space" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label
+                  htmlFor="complexity-space"
+                  className="mb-1 block text-xs text-stone-500 dark:text-gray-400"
+                >
                   Space
                 </label>
                 <textarea
@@ -667,14 +774,19 @@ export function ProblemDetail() {
                 />
               </div>
               <div>
-                <label htmlFor="complexity-confidence" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label
+                  htmlFor="complexity-confidence"
+                  className="mb-1 block text-xs text-stone-500 dark:text-gray-400"
+                >
                   Confidence
                 </label>
                 <select
                   id="complexity-confidence"
                   name="confidence"
                   value={confidence}
-                  onChange={(e) => markStudyDirty(setConfidence)(e.target.value)}
+                  onChange={(e) =>
+                    markStudyDirty(setConfidence)(e.target.value)
+                  }
                   className={inputCls}
                 >
                   <option value="">—</option>
@@ -689,6 +801,12 @@ export function ProblemDetail() {
                   </p>
                 )}
               </div>
+              <button
+                onClick={() => void markDone()}
+                className="mt-auto w-full rounded border border-stone-400 px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+              >
+                Mark as Done
+              </button>
             </div>
           </div>
 
@@ -704,20 +822,12 @@ export function ProblemDetail() {
             />
           </div>
 
-          {/* ── Mark as Done ── */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => void markDone()}
-              className="rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
-            >
-              Mark as Done
-            </button>
-          </div>
-
           {/* ── Review History ── */}
           <section className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">Review history</h2>
+              <h2 className="text-lg font-semibold text-stone-900 dark:text-gray-100">
+                Review history
+              </h2>
               {hasReviews &&
                 (confirmResetProgress ? (
                   <div className="flex items-center gap-2 text-xs font-medium">
@@ -838,7 +948,10 @@ export function ProblemDetail() {
               Delete problem?
             </h2>
             <p className="mt-2 text-sm text-stone-500 dark:text-gray-400">
-              <span className="font-medium text-stone-800 dark:text-gray-200">{problem.title}</span> will be permanently deleted. This cannot be undone.
+              <span className="font-medium text-stone-800 dark:text-gray-200">
+                {problem.title}
+              </span>{" "}
+              will be permanently deleted. This cannot be undone.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -861,22 +974,5 @@ export function ProblemDetail() {
         </div>
       )}
     </div>
-  );
-}
-
-function MetaChip({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="flex items-baseline gap-1">
-      <span className="text-xs uppercase tracking-wide text-stone-600 dark:text-gray-500">
-        {label}
-      </span>
-      <span className="font-semibold text-stone-900 dark:text-white">{children}</span>
-    </span>
   );
 }

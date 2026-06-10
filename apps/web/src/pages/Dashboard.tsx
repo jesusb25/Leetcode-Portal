@@ -154,7 +154,7 @@ export function Dashboard() {
       )}
 
       {loading && (
-        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <div className="mb-3 h-3 w-14 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-2">
@@ -170,7 +170,7 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-900 dark:text-gray-500">
             Up Next
           </p>
@@ -223,7 +223,7 @@ export function Dashboard() {
             </div>
             <button
               onClick={() => void markDone(upNext)}
-              className="shrink-0 rounded bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+              className="shrink-0 rounded border border-stone-400 px-4 py-2 text-sm font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
             >
               Mark as Done
             </button>
@@ -259,7 +259,7 @@ export function Dashboard() {
       )}
 
       <section>
-        <div className="mb-3 flex items-center gap-4">
+        <div className="mb-3 flex items-center gap-6">
           <h2 className="shrink-0 text-lg font-semibold text-stone-900 dark:text-gray-100">
             Review Queue
           </h2>
@@ -379,7 +379,7 @@ export function Dashboard() {
                   </div>
                   <button
                     onClick={() => void markDone(p)}
-                    className="shrink-0 rounded bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                    className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
                   >
                     Mark as Done
                   </button>
@@ -394,7 +394,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="overflow-hidden rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+                  className="overflow-hidden rounded-xl border border-stone-400 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -405,7 +405,7 @@ export function Dashboard() {
                         ? toggleGroup(group.key)
                         : undefined
                     }
-                    className={`flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-2 py-2 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100 ${isOpen ? "border-b-2 border-stone-300 dark:border-gray-600" : ""}`}
+                    className="flex cursor-pointer select-none items-center justify-between gap-2 bg-stone-50 px-2 py-2 text-sm font-bold uppercase tracking-wider text-stone-800 dark:bg-gray-800/60 dark:text-gray-100"
                   >
                     <span className="flex items-center gap-2">
                       <svg
@@ -483,7 +483,7 @@ export function Dashboard() {
                             </div>
                             <button
                               onClick={() => void markDone(p)}
-                              className="shrink-0 rounded bg-stone-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                              className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
                             >
                               Mark as Done
                             </button>
@@ -522,10 +522,10 @@ function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
-      className={`h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-gray-800 ${className}`}
+      className={`h-2 overflow-hidden rounded-full bg-stone-300 dark:bg-gray-700 ${className}`}
     >
       <div
-        className="h-full rounded-full bg-stone-900 transition-[width] duration-500 ease-out dark:bg-gray-100"
+        className="h-full rounded-full bg-green-600 transition-[width] duration-500 ease-out dark:bg-green-400"
         style={{ width: `${pct}%` }}
       />
     </div>

@@ -6,6 +6,12 @@
 --
 -- It also adds the real FK from each table's user_id to Supabase's auth.users
 -- (which drizzle does not model, since auth.users lives in the `auth` schema).
+--
+-- IMPORTANT: these policies only apply to the `authenticated` role. The API
+-- connects as the table-owner `postgres` role (see packages/db/src/client.ts),
+-- which BYPASSES RLS — so this is defense-in-depth, NOT the active isolation
+-- boundary. The real boundary is the per-query `user_id = req.userId` filter in
+-- apps/api. Do not assume RLS is protecting you on the application path.
 
 -- --- Foreign keys to auth.users ---------------------------------------------
 ALTER TABLE problems

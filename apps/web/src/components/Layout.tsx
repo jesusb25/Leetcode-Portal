@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useThemePreference } from "../lib/theme";
 import { SettingsMenu } from "./SettingsMenu";
+import { SiteFooter } from "./SiteFooter";
 import { ThemeToggle } from "./ThemeToggle";
 
 const SIDEBAR_STORAGE_KEY = "leetcode-srs-sidebar";
@@ -79,9 +80,12 @@ export function Layout() {
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-y-auto px-6 py-7">
-          <div className="mx-auto max-w-5xl">
-            <Outlet />
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-full flex-col px-6 py-7">
+            <div className="mx-auto w-full max-w-5xl flex-1">
+              <Outlet />
+            </div>
+            <SiteFooter />
           </div>
         </main>
       </div>

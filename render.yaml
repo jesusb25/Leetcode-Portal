@@ -26,7 +26,7 @@ services:
         sync: false
       - key: SUPABASE_URL # Supabase project URL; used to build the JWKS URL for verifying access tokens
         sync: false
-      - key: DEV_USER_ID
+      - key: CORS_ORIGIN # Allowed browser origin(s) for the API, comma-separated. Set to https://<your-web>.onrender.com
         sync: false
 
   # ---------- Web: Vite SPA (static) ----------

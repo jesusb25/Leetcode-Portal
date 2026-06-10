@@ -88,6 +88,8 @@ export function ProblemDetail() {
   const [notes, setNotes] = useState("");
   const [studyDirty, setStudyDirty] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const studyDirtyRef = useRef(false);
+  const saveStudyNotesRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // --- Review log ---
   const [reviewLog, setReviewLog] = useState<Review[]>([]);
@@ -186,12 +188,33 @@ export function ProblemDetail() {
       });
       setProblem(updated);
       setStudyDirty(false);
+      studyDirtyRef.current = false;
       // Confidence ("Mastered") changes whether the problem is in the due queue.
       invalidateProblemData(queryClient, id);
     } catch (e) {
       setError((e as Error).message);
     }
   }
+
+  // Keep refs current so the unmount cleanup can access the latest values.
+  useEffect(() => {
+    studyDirtyRef.current = studyDirty;
+  }, [studyDirty]);
+
+  useEffect(() => {
+    saveStudyNotesRef.current = saveStudyNotes;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, problemSummary, codeSnippet, language, timeComplexity, spaceComplexity, confidence, notes]);
+
+  // Flush any pending save when navigating away.
+  useEffect(() => {
+    return () => {
+      if (studyDirtyRef.current) {
+        if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+        void saveStudyNotesRef.current();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!studyDirty) return;

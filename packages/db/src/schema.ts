@@ -99,7 +99,20 @@ export const problemSchedule = pgTable(
   }),
 );
 
+/**
+ * One row per user, written the first (and only) time their library is seeded with
+ * the NeetCode 150 at account creation. Its presence marks the user as already
+ * provisioned, so seeding never re-runs on later sign-ins (and never undoes a
+ * problem the user has since deleted). Server-only — see migrations/9998 for the FK
+ * to auth.users and the RLS lockdown.
+ */
+export const userProvisioning = pgTable("user_provisioning", {
+  userId: uuid("user_id").primaryKey(),
+  seededAt: timestamp("seeded_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type CategoryRow = typeof categories.$inferSelect;
 export type ProblemRow = typeof problems.$inferSelect;
 export type ReviewRow = typeof reviews.$inferSelect;
 export type ProblemScheduleRow = typeof problemSchedule.$inferSelect;
+export type UserProvisioningRow = typeof userProvisioning.$inferSelect;

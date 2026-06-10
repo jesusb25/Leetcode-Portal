@@ -13,6 +13,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:dev-user": "tsx src/dev-user.ts",
+    "db:reset-user": "tsx src/reset-user.ts",
     "db:rls": "tsx src/rls.ts",
     "db:seed": "tsx src/seed.ts",
     "build": "tsc --noEmit",

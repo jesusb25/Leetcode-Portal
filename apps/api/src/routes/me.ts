@@ -1,23 +1,21 @@
-import { runSeed } from "@repo/db";
+import { provisionUser } from "@repo/db";
 import { Router } from "express";
 import { asyncHandler } from "../middleware/error.js";
 
 export const meRouter: Router = Router();
 
 /**
- * POST /me/bootstrap — ensure the signed-in user's library holds the NeetCode 150
- * (spec §8). The web app calls this on first sign-in so a brand-new user instantly
- * gets all 150 problems.
+ * POST /me/bootstrap — provision the signed-in user's library with the NeetCode 150
+ * (spec §8). The web app calls this on sign-in; the seed runs exactly once, at
+ * account creation, and every later sign-in is a no-op (see `provisionUser`).
  *
- * Idempotent and per-user: re-running only inserts problems this user is missing,
- * so it's a cheap no-op for returning users and safe to call on every sign-in.
- * Unlike /admin/seed this is available in production, since it only ever touches
- * the caller's own rows (req.userId).
+ * Touches only the caller's own rows (req.userId), so unlike /admin/seed it is
+ * available in production. Returns `{ seeded: true }` only on the first call.
  */
 meRouter.post(
   "/bootstrap",
   asyncHandler(async (req, res) => {
-    const result = await runSeed(req.userId);
+    const result = await provisionUser(req.userId);
     res.json(result);
   }),
 );

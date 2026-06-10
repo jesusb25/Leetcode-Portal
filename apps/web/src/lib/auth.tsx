@@ -48,16 +48,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       setLoading(false);
 
-      // On sign-in, make sure the user's library has the NeetCode 150. The server
-      // call is idempotent (only inserts what's missing), so a first-time Google
-      // user gets all 150 while a returning user is a cheap no-op. Fires on the
-      // SIGNED_IN event only — not on session restore (INITIAL_SESSION) or token
-      // refresh — and re-fetches so the seeded problems appear immediately.
+      // On sign-in, provision the user's library. The server seeds the NeetCode 150
+      // exactly once (at account creation) and no-ops on every later sign-in, so a
+      // first-time Google user gets all 150 and returning users are untouched. Fires
+      // on the SIGNED_IN event only — not on session restore (INITIAL_SESSION) or
+      // token refresh. Re-fetch only when seeding actually happened.
       if (event === "SIGNED_IN" && next) {
         api
           .bootstrap()
-          .then(() => queryClient.invalidateQueries())
-          .catch((err) => console.error("Library bootstrap failed:", err));
+          .then((res) => {
+            if (res.seeded) queryClient.invalidateQueries();
+          })
+          .catch((err) => console.error("Library provisioning failed:", err));
       }
     });
 

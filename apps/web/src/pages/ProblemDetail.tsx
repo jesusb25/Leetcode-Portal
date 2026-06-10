@@ -436,24 +436,30 @@ export function ProblemDetail() {
         <div className="space-y-4">
           <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">Edit Problem</h1>
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Title</label>
+            <label htmlFor="edit-title" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Title</label>
             <input
+              id="edit-title"
+              name="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputCls}
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">URL</label>
+            <label htmlFor="edit-url" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">URL</label>
             <input
+              id="edit-url"
+              name="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className={inputCls}
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Difficulty</label>
+            <label htmlFor="edit-difficulty" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Difficulty</label>
             <select
+              id="edit-difficulty"
+              name="difficulty"
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
               className={inputCls}
@@ -466,8 +472,10 @@ export function ProblemDetail() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
+            <label htmlFor="edit-category" className="mb-1 block text-sm font-medium text-stone-700 dark:text-gray-200">Category</label>
             <select
+              id="edit-category"
+              name="category"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className={inputCls}
@@ -588,10 +596,12 @@ export function ProblemDetail() {
             <div className={`${sectionCls} w-full shrink-0 sm:w-52`}>
               <p className={sectionHeadCls}>Complexity</p>
               <div>
-                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label htmlFor="complexity-time" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Time
                 </label>
                 <textarea
+                  id="complexity-time"
+                  name="timeComplexity"
                   value={timeComplexity}
                   onChange={(e) => {
                     e.target.style.height = "auto";
@@ -610,10 +620,12 @@ export function ProblemDetail() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label htmlFor="complexity-space" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Space
                 </label>
                 <textarea
+                  id="complexity-space"
+                  name="spaceComplexity"
                   value={spaceComplexity}
                   onChange={(e) => {
                     e.target.style.height = "auto";
@@ -632,10 +644,12 @@ export function ProblemDetail() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
+                <label htmlFor="complexity-confidence" className="mb-1 block text-xs text-stone-500 dark:text-gray-400">
                   Confidence
                 </label>
                 <select
+                  id="complexity-confidence"
+                  name="confidence"
                   value={confidence}
                   onChange={(e) => markStudyDirty(setConfidence)(e.target.value)}
                   className={inputCls}

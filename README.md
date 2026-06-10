@@ -3,8 +3,9 @@
 A full-stack web app for spaced-repetition practice of LeetCode problems. Work through
 the NeetCode 150 and your own problems; an auto-scheduler surfaces what's most overdue.
 
-Single-user today, architected for multi-user from day one (every table carries a
-`user_id` and ships with Row-Level Security policies).
+Multi-user via Google sign-in (Supabase Auth). Every table carries a `user_id`, and
+each new account is auto-provisioned with the NeetCode 150 on first sign-in. Local
+development can bypass auth with a `DEV_USER_ID` (see [Auth](#auth)).
 
 ## Tech stack
 
@@ -13,7 +14,7 @@ Single-user today, architected for multi-user from day one (every table carries 
 | Frontend | React + Vite + TypeScript + Tailwind CSS  |
 | Backend  | Node.js + Express + TypeScript            |
 | Database | PostgreSQL (Supabase) + Drizzle ORM       |
-| Auth     | Supabase Auth (wired in, bypassed in dev) |
+| Auth     | Supabase Auth — Google OAuth (dev-bypassable)   |
 | Monorepo | Turborepo + pnpm                          |
 
 ## Structure
@@ -99,13 +100,25 @@ pnpm db:seed         # seed the 18 categories + NeetCode 150 (idempotent)
 pnpm dev             # starts api (http://localhost:3001) and web (http://localhost:5173)
 ```
 
-## Auth in dev
+## Auth
 
-There is no login/signup UI. The API middleware validates a Supabase JWT when an
-`Authorization: Bearer <token>` header is present, and otherwise falls back to
-`DEV_USER_ID` in development (see `apps/api/src/middleware/auth.ts`). All seeded and
-created data is owned by that dev user. Swapping in real auth later means adding a login
-UI and removing the dev bypass — the validation path already exists.
+The web app has a Google sign-in screen (`apps/web/src/pages/Login.tsx`). On the first
+sign-in, the client calls `POST /me/bootstrap`, which seeds that account's library with
+the NeetCode 150 exactly once; later sign-ins are a no-op.
+
+The API middleware (`apps/api/src/middleware/auth.ts`) verifies the Supabase access token
+against the project's JWKS when an `Authorization: Bearer <token>` header is present, and
+attaches `req.userId` from the token's `sub` claim. Every route is scoped to `req.userId`.
+
+**Dev bypass.** When no `Authorization` header is sent, the middleware falls back to
+`DEV_USER_ID` — but only when `NODE_ENV !== "production"`. This lets you run the whole app
+locally without configuring Supabase: leave `VITE_SUPABASE_*` unset and the frontend skips
+the login screen entirely. In production the bypass is disabled, so a valid token is
+required.
+
+To run with real auth locally, set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (web) and
+`SUPABASE_URL` (api), and add a Google provider + your local origin to your Supabase
+project's Auth settings.
 
 ## API
 
@@ -113,14 +126,18 @@ Base path `/api/v1` (all routes require auth, dev-bypassed as above):
 
 | Method | Path                                | Purpose                                         |
 | ------ | ----------------------------------- | ----------------------------------------------- |
+| POST   | `/me/bootstrap`                     | Provision the caller's NeetCode 150 (once)      |
 | GET    | `/problems`                         | List (filters: `category`, `difficulty`, `due`) |
 | GET    | `/problems/:id`                     | One problem + schedule state                    |
 | POST   | `/problems`                         | Create                                          |
 | PUT    | `/problems/:id`                     | Update metadata + study notes                   |
 | DELETE | `/problems/:id`                     | Delete                                          |
-| POST   | `/problems/fetch-metadata`          | Scrape a LeetCode URL                           |
+| POST   | `/problems/fetch-metadata`          | Scrape a LeetCode / NeetCode URL                |
 | POST   | `/reviews`                          | Mark done; runs scheduler                       |
+| DELETE | `/reviews/reset`                    | Reset all review progress for the caller        |
+| DELETE | `/reviews/:problemId/all`           | Reset one problem's review progress             |
 | DELETE | `/reviews/:problemId/last`          | Undo the most recent review                     |
+| PATCH  | `/reviews/:problemId/last`          | Edit the most recent review's timestamp         |
 | GET    | `/reviews/:problemId/log`           | Full review history, most recent first          |
 | PATCH  | `/reviews/:problemId/log/:reviewId` | Edit an arbitrary past review's timestamp       |
 | DELETE | `/reviews/:problemId/log/:reviewId` | Delete an arbitrary past review                 |
@@ -143,6 +160,27 @@ Interval progression after each review: `+1, +3, +7, +14, +30` days (then capped
 If a problem becomes more than twice its scheduled interval overdue, its streak resets to
 zero. Editing or deleting a past review rebuilds the entire chain so review counts and
 intervals stay consistent. See `packages/shared/src/scheduler.ts`.
+
+## Deploy
+
+`render.yaml` is a [Render blueprint](https://render.com/docs/blueprint-spec) that deploys
+two services from this monorepo — the Express API (Node web service) and the Vite SPA
+(static site). The database stays on Supabase.
+
+Required environment variables:
+
+| Service | Variable                                       | Notes                                                       |
+| ------- | ---------------------------------------------- | ----------------------------------------------------------- |
+| api     | `DATABASE_URL`                                 | Supabase connection string (runtime may use pooler 6543)    |
+| api     | `SUPABASE_URL`                                 | **Required** — used to verify access tokens against the JWKS |
+| api     | `CORS_ORIGIN`                                   | **Required** — the web origin(s) allowed to call the API; without it production rejects every browser request |
+| api     | `NODE_ENV=production`                           | Disables the `DEV_USER_ID` auth bypass                      |
+| web     | `VITE_API_URL`                                  | `https://<your-api>.onrender.com/api/v1`                    |
+| web     | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`  | Baked in at build time — set before building, then redeploy |
+
+Before public sign-ins work, also: publish/verify the Google OAuth consent screen, and add
+your production web origin to the Supabase project's Auth URL configuration (Site URL +
+Redirect URLs) with the Google provider enabled.
 
 ## Scripts
 

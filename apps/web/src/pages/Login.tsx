@@ -1,9 +1,19 @@
 import { useState } from "react";
-import { signInWithGoogle } from "../lib/auth";
+import { Link, Navigate } from "react-router-dom";
+import { BrainIcon } from "../components/BrainIcon";
+import { FullScreenSpinner } from "../components/FullScreenSpinner";
+import { SiteFooter } from "../components/SiteFooter";
+import { signInWithGoogle, useAuth } from "../lib/auth";
+import { supabase } from "../lib/supabase";
 
 export function Login() {
+  const { session, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in? Don't show the form — go to the app.
+  if (supabase && loading) return <FullScreenSpinner />;
+  if (session) return <Navigate to="/dashboard" replace />;
 
   async function handleGoogle() {
     setSubmitting(true);
@@ -20,10 +30,12 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4 dark:bg-gray-950">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50 px-4 py-10 dark:bg-gray-950">
       <div className="w-full max-w-sm rounded-2xl border border-stone-300 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <div className="mb-6 flex flex-col items-center text-center">
-          <BrainIcon />
+          <Link to="/" aria-label="Leetcode SRS home">
+            <BrainIcon className="h-9 w-9 text-stone-800 dark:text-gray-100" />
+          </Link>
           <h1 className="mt-3 text-xl font-bold text-stone-900 dark:text-gray-100">
             Leetcode SRS
           </h1>
@@ -47,25 +59,21 @@ export function Login() {
             {error}
           </p>
         )}
-      </div>
-    </div>
-  );
-}
 
-function BrainIcon() {
-  return (
-    <svg
-      className="h-9 w-9 text-stone-800 dark:text-gray-100"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-    </svg>
+        <p className="mt-6 text-center text-xs text-stone-400 dark:text-gray-500">
+          By continuing you agree to our{" "}
+          <Link
+            to="/privacy"
+            className="underline underline-offset-2 transition hover:text-stone-600 dark:hover:text-gray-300"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </div>
+
+      <SiteFooter />
+    </div>
   );
 }
 

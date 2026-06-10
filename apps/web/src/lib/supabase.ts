@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Wired in but unused in the MVP — there is no login UI yet (spec §12). The API
-// accepts a dev-user bypass, so no session is required for local development.
+// Supabase client for Google sign-in (see pages/Login.tsx). Null when the
+// VITE_SUPABASE_* vars are unset, which is the local-dev path: the API accepts a
+// DEV_USER_ID bypass, so no session is required and the app skips the login screen.
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 

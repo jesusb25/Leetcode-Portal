@@ -3,6 +3,7 @@ import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { Router } from "express";
 import { categories, db, problems, problemSchedule } from "../db.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
+import { fetchMetadataLimiter } from "../middleware/rate-limit.js";
 import { fetchMetadata } from "../services/leetcode-scraper.js";
 import { serializeProblem, serializeProblemWithSchedule } from "../serializers.js";
 
@@ -147,6 +148,7 @@ problemsRouter.delete(
 /** POST /problems/fetch-metadata — scrape a LeetCode URL (spec §6/§7). */
 problemsRouter.post(
   "/fetch-metadata",
+  fetchMetadataLimiter,
   asyncHandler(async (req, res) => {
     const { url } = req.body as { url?: string };
     if (!url) throw new HttpError(400, "url is required.");

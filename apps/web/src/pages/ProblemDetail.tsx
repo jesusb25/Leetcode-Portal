@@ -50,7 +50,10 @@ function sortedProblemsOrder(
     const byCategory =
       categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
     if (byCategory !== 0) return byCategory;
-    return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+    const byDifficulty =
+      DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+    if (byDifficulty !== 0) return byDifficulty;
+    return a.title.localeCompare(b.title);
   });
 }
 
@@ -266,7 +269,10 @@ export function ProblemDetail() {
   useEffect(() => {
     if (!studyDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => void saveStudyNotesRef.current(), 1500);
+    autoSaveTimer.current = setTimeout(
+      () => void saveStudyNotesRef.current(),
+      1500,
+    );
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
@@ -722,7 +728,9 @@ export function ProblemDetail() {
             </div>
 
             {/* Complexity box on the right */}
-            <div className={`${sectionCls} flex w-full shrink-0 flex-col sm:w-52`}>
+            <div
+              className={`${sectionCls} flex w-full shrink-0 flex-col sm:w-52`}
+            >
               <p className={sectionHeadCls}>Complexity</p>
               <div>
                 <label

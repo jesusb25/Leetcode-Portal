@@ -154,7 +154,7 @@ export function Dashboard() {
       )}
 
       {loading && (
-        <section className="rounded-xl border-2 border-stone-900 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-300 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <div className="mb-3 h-3 w-14 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-2">
@@ -170,7 +170,7 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border-2 border-stone-900 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-stone-300 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-700 dark:text-gray-500">
             Up Next
           </p>
@@ -214,16 +214,16 @@ export function Dashboard() {
                     {upNext.category.name}
                   </span>
                 )}
-                <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
-                  {upNext.daysOverdue > 0
-                    ? `${upNext.daysOverdue} day${upNext.daysOverdue === 1 ? "" : "s"} overdue`
-                    : "due now"}
-                </span>
+                {upNext.daysOverdue > 0 && (
+                  <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
+                    {`${upNext.daysOverdue} day${upNext.daysOverdue === 1 ? "" : "s"} overdue`}
+                  </span>
+                )}
               </div>
             </div>
             <button
               onClick={() => void markDone(upNext)}
-              className="shrink-0 rounded border-2 border-stone-900 px-4 py-2 text-sm font-medium text-stone-900 transition hover:bg-stone-200 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+              className="shrink-0 rounded border border-stone-400 px-4 py-2 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
             >
               Mark as Done
             </button>
@@ -232,7 +232,7 @@ export function Dashboard() {
       )}
 
       {lastDone && (
-        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border-2 border-stone-900 bg-stone-50 px-4 py-3 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-800">
+        <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-800">
           <span className="text-stone-900 dark:text-gray-300">
             Marked{" "}
             <span className="font-medium text-stone-900 dark:text-gray-100">
@@ -293,7 +293,7 @@ export function Dashboard() {
                   placeholder="Search due problems…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg border-2 border-stone-900 py-1.5 pl-8 pr-3 text-sm text-stone-900 placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="w-full rounded-lg border border-stone-400 bg-stone-50 py-1.5 pl-8 pr-3 text-sm text-stone-900 placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -304,7 +304,7 @@ export function Dashboard() {
             {(["w-40", "w-32", "w-36"] as const).map((w) => (
               <div
                 key={w}
-                className="rounded-xl border-2 border-stone-900 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
+                className="rounded-xl border border-stone-300 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
               >
                 <div className="flex items-center justify-between px-4 py-3">
                   <div
@@ -325,7 +325,7 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-900 rounded-xl border-2 border-stone-900 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-300 rounded-xl border border-stone-300 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
@@ -370,16 +370,16 @@ export function Dashboard() {
                           {p.category.name}
                         </span>
                       )}
-                      <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
-                        {p.daysOverdue > 0
-                          ? `${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`
-                          : "due now"}
-                      </span>
+                      {p.daysOverdue > 0 && (
+                        <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
+                          {`${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button
                     onClick={() => void markDone(p)}
-                    className="shrink-0 rounded border-2 border-stone-900 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:bg-stone-200 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+                    className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
                   >
                     Mark as Done
                   </button>
@@ -394,7 +394,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="overflow-hidden rounded-xl border-2 border-stone-900 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
+                  className="overflow-hidden rounded-xl border border-stone-300 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -422,7 +422,7 @@ export function Dashboard() {
                       </svg>
                       {group.name}
                     </span>
-                    <span className="rounded-full border border-stone-900 bg-stone-200 px-2 py-0.5 text-xs font-semibold text-stone-900 dark:border-0 dark:bg-gray-700 dark:text-gray-300">
+                    <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-semibold text-stone-900 dark:bg-gray-700 dark:text-gray-300">
                       {group.problems.length}
                     </span>
                   </div>
@@ -434,7 +434,7 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-stone-900 border-t-2 border-stone-900 dark:divide-gray-600 dark:border-gray-600">
+                      <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
                         {group.problems.map((p) => (
                           <li
                             key={p.id}
@@ -474,16 +474,16 @@ export function Dashboard() {
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-2">
                                 <DifficultyBadge difficulty={p.difficulty} />
-                                <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
-                                  {p.daysOverdue > 0
-                                    ? `${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`
-                                    : "due now"}
-                                </span>
+                                {p.daysOverdue > 0 && (
+                                  <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
+                                    {`${p.daysOverdue} day${p.daysOverdue === 1 ? "" : "s"} overdue`}
+                                  </span>
+                                )}
                               </div>
                             </div>
                             <button
                               onClick={() => void markDone(p)}
-                              className="shrink-0 rounded border-2 border-stone-900 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:bg-stone-200 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+                              className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
                             >
                               Mark as Done
                             </button>

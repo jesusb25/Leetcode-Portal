@@ -16,7 +16,7 @@ export function CollapseAllButton({
       onClick={onClick}
       title={allOpen ? "Collapse all" : "Expand all"}
       aria-label={allOpen ? "Collapse all categories" : "Expand all categories"}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded border-2 border-stone-900 bg-stone-50 text-stone-900 transition hover:bg-stone-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-stone-400 bg-stone-50 text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
     >
       <svg
         className="h-4 w-4"

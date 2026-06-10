@@ -9,6 +9,7 @@ import { FullScreenSpinner } from "./components/FullScreenSpinner";
 import { Layout } from "./components/Layout";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { supabase } from "./lib/supabase";
+import { useKeepAlive } from "./lib/useKeepAlive";
 import { useThemePreference } from "./lib/theme";
 import { AddProblem } from "./pages/AddProblem";
 import { Dashboard } from "./pages/Dashboard";
@@ -30,6 +31,7 @@ function AppRoutes() {
   // Applies the stored light/dark theme to <html> for the public/auth screens
   // (the in-app toggle lives in Layout, which isn't mounted until signed in).
   useThemePreference();
+  useKeepAlive();
 
   return (
     <Router>

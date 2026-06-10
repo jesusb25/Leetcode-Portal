@@ -321,7 +321,7 @@ export function AddProblem() {
             )}
           </div>
           {comboOpen && (
-            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
+            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-stone-50 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
               {filteredCategories.length === 0 ? (
                 <li className="px-3 py-2 text-stone-400 dark:text-gray-500">
                   No matches

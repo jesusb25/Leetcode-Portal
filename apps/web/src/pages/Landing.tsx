@@ -1,7 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { BrainIcon } from "../components/BrainIcon";
 import { FullScreenSpinner } from "../components/FullScreenSpinner";
-import { SiteFooter } from "../components/SiteFooter";
 import { useAuth } from "../lib/auth";
 import { supabase } from "../lib/supabase";
 
@@ -54,7 +53,6 @@ export function Landing() {
         </dl>
       </main>
 
-      <SiteFooter />
     </div>
   );
 }

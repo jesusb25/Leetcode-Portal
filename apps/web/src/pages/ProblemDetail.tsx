@@ -207,6 +207,15 @@ export function ProblemDetail() {
     if (!id) return;
     setError(null);
     try {
+      // Flush any unsaved study note changes (e.g. confidence) before logging
+      // the review, otherwise a fast click wins the race against the 1.5s autosave.
+      if (studyDirty) {
+        if (autoSaveTimer.current) {
+          clearTimeout(autoSaveTimer.current);
+          autoSaveTimer.current = null;
+        }
+        await saveStudyNotes();
+      }
       await api.markDone(id);
       await load();
       invalidateProblemData(queryClient, id);

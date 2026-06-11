@@ -1,6 +1,6 @@
 import type { DueProblem } from "@repo/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CollapseAllButton } from "../components/CollapseAllButton";
 import { DifficultyBadge } from "../components/DifficultyBadge";
@@ -23,10 +23,6 @@ export function Dashboard() {
   const [actionError, setActionError] = useState<string | null>(null);
   const error = actionError ?? (dueError ? (dueError as Error).message : null);
   const [lastDone, setLastDone] = useState<DueProblem | null>(null);
-  // Total problems on today's plate (already done + still due), captured once per
-  // load so the progress bar fills as the queue drains via optimistic updates.
-  const [dayTotal, setDayTotal] = useState(0);
-  const dayTotalInit = useRef(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
     try {
       const stored = sessionStorage.getItem("dashboard-open-groups");
@@ -66,16 +62,6 @@ export function Dashboard() {
   useEffect(() => {
     sessionStorage.setItem("problem-back-url", "/dashboard");
   }, []);
-
-  // Capture the day's total once both queries have loaded; progress then fills as
-  // the queue drains. `undoLastDone` resets the flag so totals re-capture after the
-  // queue is restored.
-  useEffect(() => {
-    if (stats && !loading && !dayTotalInit.current) {
-      setDayTotal(stats.completedToday + queue.length);
-      dayTotalInit.current = true;
-    }
-  }, [stats, loading, queue.length]);
 
   // Auto-dismiss the undo toast after a few seconds.
   useEffect(() => {
@@ -118,7 +104,6 @@ export function Dashboard() {
     try {
       await api.undoLastReview(lastDone.id);
       setLastDone(null);
-      dayTotalInit.current = false; // re-capture totals once the queue is restored
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.due }),
         queryClient.invalidateQueries({ queryKey: queryKeys.stats }),
@@ -136,7 +121,8 @@ export function Dashboard() {
   const allGroupsOpen =
     groupKeys.length > 0 && groupKeys.every((k) => openGroups.has(k));
 
-  const progress = dayTotal > 0 ? (dayTotal - queue.length) / dayTotal : 0;
+  const dayTotal = stats ? stats.dueToday + stats.completedToday : 0;
+  const progress = dayTotal > 0 ? stats!.completedToday / dayTotal : 0;
 
   const needle = search.trim().toLowerCase();
   const searchResults = needle
@@ -293,7 +279,7 @@ export function Dashboard() {
                   placeholder="Search due problems…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg border border-stone-400 bg-stone-50 py-1.5 pl-8 pr-3 text-sm text-stone-900 placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="w-full appearance-none rounded-lg border border-stone-400 bg-stone-50 py-1.5 pl-8 pr-3 text-sm text-stone-900 placeholder-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -522,10 +508,10 @@ function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
-      className={`h-2.5 overflow-hidden rounded-full border border-stone-400 bg-stone-200 dark:border-0 dark:bg-gray-700 ${className}`}
+      className={`h-2.5 rounded-full border border-stone-400 bg-stone-200 dark:border-gray-600 dark:bg-gray-700 ${className}`}
     >
       <div
-        className="h-full rounded-full bg-green-600 transition-[width] duration-500 ease-out dark:bg-green-400"
+        className="h-full rounded-full bg-green-600 transition-[width] duration-500 ease-out dark:bg-green-400 dark:shadow-[0_0_10px_2px_rgba(74,222,128,0.7)]"
         style={{ width: `${pct}%` }}
       />
     </div>

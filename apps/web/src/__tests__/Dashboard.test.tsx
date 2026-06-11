@@ -76,15 +76,19 @@ describe("Dashboard", () => {
     expect(bar).toHaveAttribute("aria-valuenow", "0");
   });
 
-  it("calls the API when 'Mark as Done' is clicked", async () => {
+  it("calls the API when the done checkbox is clicked", async () => {
     due.mockResolvedValue([dueProblem]);
     markDone.mockResolvedValue({ nextReviewAt: "2026-06-08T00:00:00.000Z", reviewCount: 1 });
 
     renderDashboard();
 
-    const buttons = await screen.findAllByRole("button", { name: "Mark as Done" });
+    const buttons = await screen.findAllByRole("button", { name: "Mark as done" });
     await userEvent.click(buttons[0]);
 
-    await waitFor(() => expect(markDone).toHaveBeenCalledWith("problem-1"));
+    // Clicking draws the checkmark, then a 1s timer makes the row disappear and
+    // fires the API call. There's no exit animation, so just wait for the call.
+    await waitFor(() => expect(markDone).toHaveBeenCalledWith("problem-1"), {
+      timeout: 2000,
+    });
   });
 });

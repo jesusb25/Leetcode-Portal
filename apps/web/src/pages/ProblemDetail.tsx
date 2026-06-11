@@ -50,7 +50,10 @@ function sortedProblemsOrder(
     const byCategory =
       categoryRank(a.category?.slug) - categoryRank(b.category?.slug);
     if (byCategory !== 0) return byCategory;
-    return DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+    const byDifficulty =
+      DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
+    if (byDifficulty !== 0) return byDifficulty;
+    return a.title.localeCompare(b.title);
   });
 }
 
@@ -120,6 +123,9 @@ export function ProblemDetail() {
   const [reviewedAtInput, setReviewedAtInput] = useState("");
   const [confirmResetProgress, setConfirmResetProgress] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [leaveConfirm, setLeaveConfirm] = useState<{
+    action: () => void;
+  } | null>(null);
 
   // --- Undo toast ---
   const [undoToast, setUndoToast] = useState<{
@@ -176,12 +182,17 @@ export function ProblemDetail() {
         ),
       )
       .catch(() => setCategories([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Fetch the navigation order once on mount only — re-fetching on every id change
+  // would re-sort mid-session (e.g. after marking a problem Mastered) and break prev/next.
+  useEffect(() => {
     api
       .listProblems()
       .then((all) => setSortedIds(sortedProblemsOrder(all).map((p) => p.id)))
       .catch(() => setSortedIds([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, []);
 
   useEffect(() => () => clearUndoTimer(), []);
 
@@ -261,7 +272,10 @@ export function ProblemDetail() {
   useEffect(() => {
     if (!studyDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => void saveStudyNotes(), 1500);
+    autoSaveTimer.current = setTimeout(
+      () => void saveStudyNotesRef.current(),
+      1500,
+    );
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
@@ -334,7 +348,28 @@ export function ProblemDetail() {
   }
 
   function startDeleteReview(review: Review) {
-    clearUndoTimer();
+    // If there's already a pending delete, commit it immediately before starting a new one.
+    if (undoTimerRef.current && undoToast?.type === "review") {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+      const pending = undoToast.review;
+      setUndoToast(null);
+      if (id) {
+        void api
+          .deleteReview(id, pending.id)
+          .then(() => invalidateProblemData(queryClient, id))
+          .catch((e: unknown) => {
+            setError((e as Error).message);
+            setReviewLog((prev) =>
+              [...prev, pending].sort(
+                (a, b) =>
+                  new Date(b.reviewedAt).getTime() -
+                  new Date(a.reviewedAt).getTime(),
+              ),
+            );
+          });
+      }
+    }
     setReviewLog((prev) => prev.filter((r) => r.id !== review.id));
     setUndoToast({ type: "review", review });
     undoTimerRef.current = setTimeout(async () => {
@@ -389,6 +424,14 @@ export function ProblemDetail() {
     };
   }
 
+  function guardedNavigate(action: () => void) {
+    if (studyDirty) {
+      setLeaveConfirm({ action });
+    } else {
+      action();
+    }
+  }
+
   if (!problem) {
     if (error) {
       return <p className="text-sm text-red-500 dark:text-red-400">{error}</p>;
@@ -419,7 +462,7 @@ export function ProblemDetail() {
           </div>
         </div>
         {/* metadata bar */}
-        <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-white px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <div className="flex flex-wrap gap-5 rounded-xl border border-stone-400 bg-stone-50 px-4 py-3 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           {(["w-20", "w-14", "w-20", "w-28", "w-24"] as const).map((w) => (
             <div
               key={w}
@@ -429,14 +472,14 @@ export function ProblemDetail() {
         </div>
         {/* approach + complexity */}
         <div className="flex flex-col gap-4 sm:flex-row">
-          <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
             <div className="flex items-center justify-between">
               <div className="h-3 w-16 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
               <div className="h-6 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             </div>
             <div className="h-60 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
           </div>
-          <div className="w-full shrink-0 space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900 sm:w-52">
+          <div className="w-full shrink-0 space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900 sm:w-52">
             <div className="h-3 w-20 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
             <div className="h-9 w-full animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
@@ -444,7 +487,7 @@ export function ProblemDetail() {
           </div>
         </div>
         {/* personal notes */}
-        <div className="space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <div className="space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <div className="h-3 w-24 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
           <div className="h-28 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-700" />
         </div>
@@ -470,7 +513,7 @@ export function ProblemDetail() {
   const inputCls =
     "w-full rounded-lg border border-stone-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100";
   const sectionCls =
-    "space-y-3 rounded-xl border border-stone-400 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900";
+    "space-y-3 rounded-xl border border-stone-400 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900";
   const sectionHeadCls =
     "text-xs font-semibold uppercase tracking-wide text-stone-900 dark:text-gray-200";
 
@@ -479,7 +522,9 @@ export function ProblemDetail() {
       <div className="flex items-center justify-between">
         <button
           onClick={() =>
-            navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard")
+            guardedNavigate(() =>
+              navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard"),
+            )
           }
           className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
@@ -488,7 +533,9 @@ export function ProblemDetail() {
         {sortedIds.length > 0 && (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => prevId && navigate(`/problems/${prevId}`)}
+              onClick={() =>
+                prevId && guardedNavigate(() => navigate(`/problems/${prevId}`))
+              }
               disabled={!prevId}
               className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
@@ -498,7 +545,9 @@ export function ProblemDetail() {
               {currentIdx + 1} / {sortedIds.length}
             </span>
             <button
-              onClick={() => nextId && navigate(`/problems/${nextId}`)}
+              onClick={() =>
+                nextId && guardedNavigate(() => navigate(`/problems/${nextId}`))
+              }
               disabled={!nextId}
               className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
@@ -654,7 +703,7 @@ export function ProblemDetail() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setEditing(true)}
-                className="rounded border border-stone-400 bg-white px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="rounded border border-stone-400 bg-stone-50 px-3 py-1.5 text-sm font-medium text-stone-800 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
@@ -717,7 +766,9 @@ export function ProblemDetail() {
             </div>
 
             {/* Complexity box on the right */}
-            <div className={`${sectionCls} flex w-full shrink-0 flex-col sm:w-52`}>
+            <div
+              className={`${sectionCls} flex w-full shrink-0 flex-col sm:w-52`}
+            >
               <p className={sectionHeadCls}>Complexity</p>
               <div>
                 <label
@@ -803,7 +854,7 @@ export function ProblemDetail() {
               </div>
               <button
                 onClick={() => void markDone()}
-                className="mt-auto w-full rounded border border-stone-400 px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+                className="mt-auto w-full rounded bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
               >
                 Mark as Done
               </button>
@@ -861,7 +912,7 @@ export function ProblemDetail() {
                 Not reviewed yet. Click "Mark as Done" to log your first review.
               </p>
             ) : (
-              <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-white dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+              <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
                 {reviewLog.map((r) => (
                   <li
                     key={r.id}
@@ -935,13 +986,71 @@ export function ProblemDetail() {
         </div>
       )}
 
+      {leaveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 p-4 backdrop-blur-sm dark:bg-black/60"
+          onMouseDown={() => setLeaveConfirm(null)}
+        >
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-xl border border-stone-400 bg-stone-50 shadow-xl dark:border-gray-600 dark:bg-gray-900"
+          >
+            <div className="flex items-center justify-between border-b border-stone-400 px-5 py-3.5 dark:border-gray-600">
+              <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">
+                Log a review?
+              </h2>
+              <button
+                type="button"
+                onClick={() => setLeaveConfirm(null)}
+                aria-label="Close"
+                className="rounded p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-stone-700 dark:text-gray-300">
+                You made changes but haven't logged a review. Do you want to mark this problem as done before leaving?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const go = leaveConfirm.action;
+                    setLeaveConfirm(null);
+                    await markDone();
+                    go();
+                  }}
+                  className="flex-1 rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                >
+                  Mark as Done
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const go = leaveConfirm.action;
+                    setLeaveConfirm(null);
+                    go();
+                  }}
+                  className="flex-1 rounded-lg border border-stone-400 px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Leave anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmDeleteOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60"
           onClick={() => setConfirmDeleteOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-stone-300 bg-white p-6 shadow-2xl dark:border-gray-600 dark:bg-gray-900"
+            className="w-full max-w-sm rounded-2xl border border-stone-300 bg-stone-50 p-6 shadow-2xl dark:border-gray-600 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">

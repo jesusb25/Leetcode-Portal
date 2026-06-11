@@ -40,6 +40,17 @@ export interface Review {
   confidence?: string;
 }
 
+/**
+ * A single review event enriched with the problem it belongs to, for the
+ * account-wide Review Log. Unlike {@link Review} (scoped to one problem), this
+ * is returned by `GET /reviews/log` across every problem the user owns.
+ */
+export interface ReviewLogEntry extends Review {
+  problemTitle: string;
+  difficulty: Difficulty;
+  category?: Category;
+}
+
 export interface DashboardStats {
   dueToday: number;
   completedToday: number;

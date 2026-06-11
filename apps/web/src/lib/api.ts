@@ -8,6 +8,7 @@ import type {
   ProblemFilters,
   ProblemWithSchedule,
   Review,
+  ReviewLogEntry,
   ReviewScheduleResponse,
   UpdateProblemBody,
 } from "@repo/shared";
@@ -109,6 +110,10 @@ export const api = {
   },
   listReviews(problemId: string): Promise<Review[]> {
     return request(`/reviews/${problemId}/log`);
+  },
+  // Account-wide review history (every problem), for the Review Log tab.
+  listAllReviews(): Promise<ReviewLogEntry[]> {
+    return request("/reviews/log");
   },
   editReview(
     problemId: string,

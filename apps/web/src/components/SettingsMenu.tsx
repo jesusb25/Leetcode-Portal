@@ -77,7 +77,7 @@ export function SettingsMenu() {
           >
             <div
               onMouseDown={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-xl border border-stone-400 bg-white shadow-xl dark:border-gray-600 dark:bg-gray-900"
+              className="w-full max-w-sm rounded-xl border border-stone-400 bg-stone-50 shadow-xl dark:border-gray-600 dark:bg-gray-900"
             >
               <div className="flex items-center justify-between border-b border-stone-400 px-5 py-3.5 dark:border-gray-600">
                 <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">

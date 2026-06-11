@@ -6,7 +6,7 @@ import {
 } from "@repo/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { Router } from "express";
-import { db, problems, problemSchedule, reviews } from "../db.js";
+import { categories, db, problems, problemSchedule, reviews } from "../db.js";
 import { asyncHandler, HttpError } from "../middleware/error.js";
 
 export const reviewsRouter: Router = Router();
@@ -262,6 +262,52 @@ reviewsRouter.patch(
     await syncScheduleFromReviews(problemId, req.userId);
 
     res.json(await scheduleState(problemId));
+  }),
+);
+
+/**
+ * GET /reviews/log — every review event across the user's whole library, most
+ * recent first, joined with each problem's title/difficulty/category. Powers the
+ * account-wide Review Log tab.
+ */
+reviewsRouter.get(
+  "/log",
+  asyncHandler(async (req, res) => {
+    const rows = await db
+      .select({
+        id: reviews.id,
+        problemId: reviews.problemId,
+        reviewedAt: reviews.reviewedAt,
+        reviewCount: reviews.reviewCount,
+        nextReviewAt: reviews.nextReviewAt,
+        confidence: reviews.confidence,
+        problemTitle: problems.title,
+        difficulty: problems.difficulty,
+        categoryId: categories.id,
+        categoryName: categories.name,
+        categorySlug: categories.slug,
+      })
+      .from(reviews)
+      .innerJoin(problems, eq(reviews.problemId, problems.id))
+      .leftJoin(categories, eq(problems.categoryId, categories.id))
+      .where(eq(reviews.userId, req.userId))
+      .orderBy(desc(reviews.reviewedAt));
+
+    res.json(
+      rows.map((r) => ({
+        id: r.id,
+        problemId: r.problemId,
+        reviewedAt: (r.reviewedAt ?? new Date()).toISOString(),
+        reviewCount: r.reviewCount,
+        nextReviewAt: r.nextReviewAt.toISOString(),
+        confidence: r.confidence ?? undefined,
+        problemTitle: r.problemTitle,
+        difficulty: (r.difficulty ?? "Medium") as "Easy" | "Medium" | "Hard",
+        category: r.categoryId
+          ? { id: r.categoryId, name: r.categoryName!, slug: r.categorySlug! }
+          : undefined,
+      })),
+    );
   }),
 );
 

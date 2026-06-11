@@ -177,7 +177,7 @@ export function AddProblem() {
   }
 
   const inputBase =
-    "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 dark:bg-gray-900 dark:text-gray-100";
+    "w-full rounded-lg border px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 bg-stone-50 dark:bg-gray-900 dark:text-gray-100";
   const inputCls = `${inputBase} border-stone-400 focus:ring-stone-300 dark:border-gray-600`;
   const inputErrorCls = `${inputBase} border-red-500 focus:ring-red-300 dark:border-red-500`;
 
@@ -313,7 +313,7 @@ export function AddProblem() {
               <button
                 type="button"
                 onClick={clearCategory}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 dark:text-gray-500 dark:hover:text-gray-200"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-600 hover:text-stone-900 dark:text-gray-500 dark:hover:text-gray-200"
                 tabIndex={-1}
               >
                 ✕
@@ -321,9 +321,9 @@ export function AddProblem() {
             )}
           </div>
           {comboOpen && (
-            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
+            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-stone-50 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
               {filteredCategories.length === 0 ? (
-                <li className="px-3 py-2 text-stone-400 dark:text-gray-500">
+                <li className="px-3 py-2 text-stone-700 dark:text-gray-500">
                   No matches
                 </li>
               ) : (

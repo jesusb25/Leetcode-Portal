@@ -34,9 +34,9 @@ export function Landing() {
           Leetcode SRS
         </h1>
         <p className="mt-3 max-w-md text-base text-stone-600 dark:text-gray-300">
-          A spaced-repetition trainer for LeetCode. Track the problems you solve,
-          review them on a schedule that fits how memory actually works, and
-          retain the patterns instead of re-grinding them.
+          A spaced-repetition trainer for LeetCode. Track the problems you
+          solve, review them on a schedule that fits how memory actually works,
+          and retain the patterns instead of re-grinding them.
         </p>
 
         <Link

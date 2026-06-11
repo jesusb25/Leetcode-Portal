@@ -75,6 +75,9 @@ export function Layout() {
             <NavLink to="/problems" className={linkClass} end>
               Problems
             </NavLink>
+            <NavLink to="/reviews" className={linkClass}>
+              Review Log
+            </NavLink>
             <NavLink to="/problems/new" className={linkClass}>
               Add Problem
             </NavLink>

@@ -8,6 +8,96 @@ import { api } from "../lib/api";
 import { getProblemQuestionUrl } from "../lib/neetcode";
 import { queryKeys } from "../lib/queryKeys";
 
+const CIRCUMFERENCE = 2 * Math.PI * 13; // r=13 in a 30x30 viewBox
+
+const checkboxStyles = `
+@keyframes spin-arc {
+  0%   { stroke-dashoffset: ${CIRCUMFERENCE}; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes draw-check {
+  0%   { stroke-dashoffset: 22; }
+  100% { stroke-dashoffset: 0; }
+}
+.arc-animate {
+  stroke-dasharray: ${CIRCUMFERENCE};
+  stroke-dashoffset: ${CIRCUMFERENCE};
+  animation: spin-arc 0.9s ease-in-out forwards;
+}
+.check-animate {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  animation: draw-check 0.2s ease 0.75s forwards;
+}
+`;
+
+function DoneCheckbox({
+  onCheck,
+  size = "md",
+}: {
+  onCheck: () => void;
+  size?: "md" | "lg";
+}) {
+  const [checked, setChecked] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const dim = size === "lg" ? "h-7 w-7" : "h-6 w-6";
+
+  function handleClick() {
+    if (checked) return;
+    setChecked(true);
+    // Let the checkmark draw, then remove the card from the queue.
+    setTimeout(onCheck, 1000);
+  }
+
+  const trackColor = checked
+    ? "text-green-200 dark:text-green-900"
+    : hovered
+      ? "text-green-600 dark:text-green-500"
+      : "text-stone-300 dark:text-gray-600";
+
+  return (
+    <button
+      onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      aria-label="Mark as done"
+      className={`relative shrink-0 ${dim} rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400`}
+    >
+      <svg viewBox="0 0 30 30" fill="none" aria-hidden="true" className="h-full w-full -rotate-90">
+        {/* track */}
+        <circle
+          cx="15" cy="15" r="13"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          className={`transition-colors duration-150 ${trackColor}`}
+        />
+        {/* sweeping arc */}
+        {checked && (
+          <circle
+            cx="15" cy="15" r="13"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+            className="arc-animate text-green-700 dark:text-green-400"
+          />
+        )}
+        {/* checkmark — drawn after arc nearly completes */}
+        <g transform="rotate(90 15 15)">
+          <polyline
+            points="8,15.5 12.5,20 22,10"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={checked ? "check-animate text-green-700 dark:text-green-400" : "opacity-0"}
+          />
+        </g>
+      </svg>
+    </button>
+  );
+}
+
 export function Dashboard() {
   const queryClient = useQueryClient();
   const {
@@ -94,6 +184,7 @@ export function Dashboard() {
     },
   });
 
+  // Checkbox finished drawing its checkmark: remove the card from the queue.
   function markDone(problem: DueProblem) {
     markDoneMutation.mutate(problem);
   }
@@ -131,6 +222,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <style>{checkboxStyles}</style>
       <h1 className="text-2xl font-bold text-stone-900 dark:text-gray-100">
         Dashboard
       </h1>
@@ -156,7 +248,10 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section
+          key={upNext.id}
+          className="rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900"
+        >
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-700 dark:text-gray-500">
             Up Next
           </p>
@@ -207,12 +302,7 @@ export function Dashboard() {
                 )}
               </div>
             </div>
-            <button
-              onClick={() => void markDone(upNext)}
-              className="shrink-0 rounded border border-stone-400 px-4 py-2 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
-            >
-              Mark as Done
-            </button>
+            <DoneCheckbox size="lg" onCheck={() => markDone(upNext)} />
           </div>
         </section>
       )}
@@ -311,11 +401,11 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-300 rounded-xl border border-black bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+            <ul className="rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
-                  className="flex items-center justify-between gap-4 p-3"
+                  className="flex items-center justify-between gap-4 border-b border-stone-300 p-3 last:border-b-0 dark:border-gray-600"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -363,12 +453,7 @@ export function Dashboard() {
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => void markDone(p)}
-                    className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
-                  >
-                    Mark as Done
-                  </button>
+                  <DoneCheckbox onCheck={() => markDone(p)} />
                 </li>
               ))}
             </ul>
@@ -420,11 +505,11 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-black border-t border-black dark:divide-gray-600 dark:border-gray-600">
+                      <ul className="border-t border-black dark:border-gray-600">
                         {group.problems.map((p) => (
                           <li
                             key={p.id}
-                            className="flex items-center justify-between gap-4 px-4 py-3"
+                            className="flex items-center justify-between gap-4 border-b border-black px-4 py-3 last:border-b-0 dark:border-gray-600"
                           >
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
@@ -467,12 +552,7 @@ export function Dashboard() {
                                 )}
                               </div>
                             </div>
-                            <button
-                              onClick={() => void markDone(p)}
-                              className="shrink-0 rounded border border-stone-400 px-3 py-1.5 text-sm font-medium text-stone-900 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
-                            >
-                              Mark as Done
-                            </button>
+                            <DoneCheckbox onCheck={() => markDone(p)} />
                           </li>
                         ))}
                       </ul>

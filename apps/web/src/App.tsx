@@ -18,6 +18,7 @@ import { Login } from "./pages/Login";
 import { Privacy } from "./pages/Privacy";
 import { ProblemDetail } from "./pages/ProblemDetail";
 import { ProblemLibrary } from "./pages/ProblemLibrary";
+import { ReviewLog } from "./pages/ReviewLog";
 
 export function App() {
   return (
@@ -47,6 +48,7 @@ function AppRoutes() {
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/problems" element={<ProblemLibrary />} />
+            <Route path="/reviews" element={<ReviewLog />} />
             <Route path="/problems/new" element={<AddProblem />} />
             <Route path="/problems/:id" element={<ProblemDetail />} />
           </Route>

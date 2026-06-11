@@ -34,9 +34,9 @@ export function Landing() {
           Leetcode SRS
         </h1>
         <p className="mt-3 max-w-md text-base text-stone-600 dark:text-gray-300">
-          A spaced-repetition trainer for LeetCode. Track the problems you solve,
-          review them on a schedule that fits how memory actually works, and
-          retain the patterns instead of re-grinding them.
+          A spaced-repetition trainer for LeetCode. Track the problems you
+          solve, review them on a schedule that fits how memory actually works,
+          and retain the patterns instead of re-grinding them.
         </p>
 
         <Link
@@ -62,6 +62,14 @@ export function Landing() {
         </dl>
       </main>
 
+      <footer className="mx-auto mt-10 w-full max-w-2xl text-center text-sm text-stone-500 dark:text-gray-400">
+        <Link
+          to="/privacy"
+          className="underline-offset-4 hover:text-stone-900 hover:underline dark:hover:text-gray-100"
+        >
+          Privacy Policy
+        </Link>
+      </footer>
     </div>
   );
 }

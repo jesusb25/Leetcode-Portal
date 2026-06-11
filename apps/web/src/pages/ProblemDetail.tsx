@@ -123,6 +123,9 @@ export function ProblemDetail() {
   const [reviewedAtInput, setReviewedAtInput] = useState("");
   const [confirmResetProgress, setConfirmResetProgress] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [leaveConfirm, setLeaveConfirm] = useState<{
+    action: () => void;
+  } | null>(null);
 
   // --- Undo toast ---
   const [undoToast, setUndoToast] = useState<{
@@ -345,7 +348,28 @@ export function ProblemDetail() {
   }
 
   function startDeleteReview(review: Review) {
-    clearUndoTimer();
+    // If there's already a pending delete, commit it immediately before starting a new one.
+    if (undoTimerRef.current && undoToast?.type === "review") {
+      clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+      const pending = undoToast.review;
+      setUndoToast(null);
+      if (id) {
+        void api
+          .deleteReview(id, pending.id)
+          .then(() => invalidateProblemData(queryClient, id))
+          .catch((e: unknown) => {
+            setError((e as Error).message);
+            setReviewLog((prev) =>
+              [...prev, pending].sort(
+                (a, b) =>
+                  new Date(b.reviewedAt).getTime() -
+                  new Date(a.reviewedAt).getTime(),
+              ),
+            );
+          });
+      }
+    }
     setReviewLog((prev) => prev.filter((r) => r.id !== review.id));
     setUndoToast({ type: "review", review });
     undoTimerRef.current = setTimeout(async () => {
@@ -398,6 +422,14 @@ export function ProblemDetail() {
       setter(v);
       setStudyDirty(true);
     };
+  }
+
+  function guardedNavigate(action: () => void) {
+    if (studyDirty) {
+      setLeaveConfirm({ action });
+    } else {
+      action();
+    }
   }
 
   if (!problem) {
@@ -490,7 +522,9 @@ export function ProblemDetail() {
       <div className="flex items-center justify-between">
         <button
           onClick={() =>
-            navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard")
+            guardedNavigate(() =>
+              navigate(sessionStorage.getItem("problem-back-url") ?? "/dashboard"),
+            )
           }
           className="flex items-center gap-1 text-sm text-stone-500 transition hover:text-stone-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
@@ -499,7 +533,9 @@ export function ProblemDetail() {
         {sortedIds.length > 0 && (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => prevId && navigate(`/problems/${prevId}`)}
+              onClick={() =>
+                prevId && guardedNavigate(() => navigate(`/problems/${prevId}`))
+              }
               disabled={!prevId}
               className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
@@ -509,7 +545,9 @@ export function ProblemDetail() {
               {currentIdx + 1} / {sortedIds.length}
             </span>
             <button
-              onClick={() => nextId && navigate(`/problems/${nextId}`)}
+              onClick={() =>
+                nextId && guardedNavigate(() => navigate(`/problems/${nextId}`))
+              }
               disabled={!nextId}
               className="rounded border border-stone-400 px-3 py-1 text-sm text-stone-600 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-30 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
@@ -816,7 +854,7 @@ export function ProblemDetail() {
               </div>
               <button
                 onClick={() => void markDone()}
-                className="mt-auto w-full rounded border border-stone-400 px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 dark:border-gray-500 dark:text-gray-200 dark:hover:border-gray-300 dark:hover:bg-gray-700"
+                className="mt-auto w-full rounded bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
               >
                 Mark as Done
               </button>
@@ -945,6 +983,64 @@ export function ProblemDetail() {
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {leaveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 p-4 backdrop-blur-sm dark:bg-black/60"
+          onMouseDown={() => setLeaveConfirm(null)}
+        >
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-xl border border-stone-400 bg-stone-50 shadow-xl dark:border-gray-600 dark:bg-gray-900"
+          >
+            <div className="flex items-center justify-between border-b border-stone-400 px-5 py-3.5 dark:border-gray-600">
+              <h2 className="text-base font-semibold text-stone-900 dark:text-gray-100">
+                Log a review?
+              </h2>
+              <button
+                type="button"
+                onClick={() => setLeaveConfirm(null)}
+                aria-label="Close"
+                className="rounded p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-stone-700 dark:text-gray-300">
+                You made changes but haven't logged a review. Do you want to mark this problem as done before leaving?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const go = leaveConfirm.action;
+                    setLeaveConfirm(null);
+                    await markDone();
+                    go();
+                  }}
+                  className="flex-1 rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                >
+                  Mark as Done
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const go = leaveConfirm.action;
+                    setLeaveConfirm(null);
+                    go();
+                  }}
+                  className="flex-1 rounded-lg border border-stone-400 px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Leave anyway
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

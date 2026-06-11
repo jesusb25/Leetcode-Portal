@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { BrainIcon } from "../components/BrainIcon";
+import { FireIcon } from "../components/FireIcon";
 import { SiteFooter } from "../components/SiteFooter";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { useThemePreference } from "../lib/theme";
 
 // Public privacy policy. Required for Google OAuth consent-screen verification
 // and linked from the homepage footer. Keep this accurate to what the app
@@ -11,14 +13,21 @@ const LAST_UPDATED = "June 10, 2026";
 const CONTACT_EMAIL = "jesusballesteros2500@gmail.com";
 
 export function Privacy() {
+  const { isDark, setTheme } = useThemePreference();
   return (
     <div className="min-h-screen bg-stone-50 px-4 py-10 dark:bg-gray-950">
       <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-4 flex justify-end">
+          <ThemeToggle
+            isDark={isDark}
+            onToggle={() => setTheme(isDark ? "light" : "dark")}
+          />
+        </div>
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-sm text-stone-500 transition hover:text-stone-800 dark:text-gray-400 dark:hover:text-gray-100"
         >
-          <BrainIcon className="h-5 w-5" />
+          <FireIcon className="h-5 w-5" />
           <span>Leetcode SRS</span>
         </Link>
 

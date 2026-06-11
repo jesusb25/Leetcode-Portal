@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useThemePreference } from "../lib/theme";
+import { FireIcon } from "./FireIcon";
 import { SettingsMenu } from "./SettingsMenu";
 import { SiteFooter } from "./SiteFooter";
 import { ThemeToggle } from "./ThemeToggle";
@@ -42,9 +43,12 @@ export function Layout() {
           >
             <MenuIcon />
           </button>
-          <Link to="/dashboard" className="flex cursor-pointer items-center gap-2">
-            <BrainIcon />
-            <span className="cursor-pointer text-lg font-bold text-stone-900 dark:text-gray-100">
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2 [cursor:pointer]"
+          >
+            <FireIcon className="pointer-events-none h-5 w-5 text-stone-800 dark:text-gray-100" />
+            <span className="text-lg font-bold text-stone-900 dark:text-gray-100">
               Leetcode SRS
             </span>
           </Link>
@@ -97,23 +101,6 @@ export function Layout() {
 function readStoredSidebar(): boolean {
   if (typeof window === "undefined") return true;
   return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "open";
-}
-
-function BrainIcon() {
-  return (
-    <svg
-      className="pointer-events-none h-5 w-5 text-stone-800 dark:text-gray-100"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-    </svg>
-  );
 }
 
 function MenuIcon() {

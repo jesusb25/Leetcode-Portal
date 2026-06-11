@@ -19,7 +19,7 @@ export function CollapseAllButton({
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-stone-400 bg-stone-50 text-stone-700 transition hover:border-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
     >
       <svg
-        className="h-4 w-4"
+        className={`h-4 w-4 transition-transform duration-200 ${allOpen ? "rotate-180" : ""}`}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -28,17 +28,8 @@ export function CollapseAllButton({
         strokeLinejoin="round"
         aria-hidden="true"
       >
-        {allOpen ? (
-          <>
-            <polyline points="17 11 12 6 7 11" />
-            <polyline points="17 18 12 13 7 18" />
-          </>
-        ) : (
-          <>
-            <polyline points="7 13 12 18 17 13" />
-            <polyline points="7 6 12 11 17 6" />
-          </>
-        )}
+        <polyline points="7 6 12 11 17 6" />
+        <polyline points="7 13 12 18 17 13" />
       </svg>
     </button>
   );

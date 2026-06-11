@@ -1,7 +1,9 @@
 import { Link, Navigate } from "react-router-dom";
-import { BrainIcon } from "../components/BrainIcon";
+import { FireIcon } from "../components/FireIcon";
 import { FullScreenSpinner } from "../components/FullScreenSpinner";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuth } from "../lib/auth";
+import { useThemePreference } from "../lib/theme";
 import { supabase } from "../lib/supabase";
 
 // Public homepage. Doubles as the "application home page" Google requires for
@@ -10,6 +12,7 @@ import { supabase } from "../lib/supabase";
 // no-Supabase dev build) skip straight to the app.
 export function Landing() {
   const { session, loading } = useAuth();
+  const { isDark, setTheme } = useThemePreference();
 
   // No Supabase configured = local dev with the API's dev-user bypass; the app
   // is usable without signing in, so don't show the marketing page.
@@ -19,8 +22,14 @@ export function Landing() {
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-50 px-4 py-10 dark:bg-gray-950">
+      <div className="flex justify-end">
+        <ThemeToggle
+          isDark={isDark}
+          onToggle={() => setTheme(isDark ? "light" : "dark")}
+        />
+      </div>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center text-center">
-        <BrainIcon className="h-12 w-12 text-stone-800 dark:text-gray-100" />
+        <FireIcon className="h-12 w-12 text-stone-800 dark:text-gray-100" />
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-stone-900 dark:text-gray-100">
           Leetcode SRS
         </h1>

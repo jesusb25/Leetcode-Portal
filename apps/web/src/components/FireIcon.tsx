@@ -1,5 +1,6 @@
-// App brand mark, shared across the public/auth screens (Landing, Login).
-export function BrainIcon({ className = "h-9 w-9" }: { className?: string }) {
+// App brand mark, shared across the public/auth screens (Landing, Login) and the
+// app header. A flame to match the spaced-repetition "streak" theme.
+export function FireIcon({ className = "h-9 w-9" }: { className?: string }) {
   return (
     <svg
       className={className}

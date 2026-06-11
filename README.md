@@ -1,5 +1,17 @@
 # LeetCode Spaced Repetition Portal
 
+**[Try it live → leetcode-web.onrender.com](https://leetcode-web.onrender.com/)**
+
+Welcome! This is a free, open-source spaced-repetition app for LeetCode practice. Sign
+in with Google and you'll get the full NeetCode 150 pre-loaded — the scheduler
+automatically surfaces what's most overdue so you spend your time on the right problems.
+Add your own problems alongside them, take notes, track review history, and watch your
+confidence compound over time.
+
+No setup required — just sign in and start reviewing.
+
+---
+
 A full-stack web app for spaced-repetition practice of LeetCode problems. Work through
 the NeetCode 150 and your own problems; an auto-scheduler surfaces what's most overdue.
 

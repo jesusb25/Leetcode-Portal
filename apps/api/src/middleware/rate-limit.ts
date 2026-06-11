@@ -33,3 +33,12 @@ export const fetchMetadataLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many metadata fetches, please wait a minute." },
 });
+
+// Tight limiter for the unauthenticated /health probe — nothing sensitive, but
+// without this it's a free DoS surface since it bypasses apiLimiter.
+export const healthLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});

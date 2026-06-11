@@ -4,7 +4,7 @@ import helmet from "helmet";
 import { env, isDev } from "./env.js";
 import { requireAuth } from "./middleware/auth.js";
 import { errorHandler, HttpError } from "./middleware/error.js";
-import { apiLimiter } from "./middleware/rate-limit.js";
+import { apiLimiter, healthLimiter } from "./middleware/rate-limit.js";
 import { adminRouter } from "./routes/admin.js";
 import { meRouter } from "./routes/me.js";
 import { problemsRouter } from "./routes/problems.js";
@@ -44,7 +44,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check (no auth, not rate-limited — Render polls it).
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/health", healthLimiter, (_req, res) => res.json({ ok: true }));
 
 // All API routes live under /api/v1 and require auth (dev-bypassed, spec §12).
 const api = express.Router();

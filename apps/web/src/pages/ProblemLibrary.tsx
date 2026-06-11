@@ -222,14 +222,14 @@ export function ProblemLibrary() {
           placeholder="Search problems…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-9 w-full rounded border border-stone-400 bg-white pl-9 pr-3 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:ring-gray-400 sm:w-72"
+          className="h-9 w-full rounded border border-stone-400 bg-stone-50 pl-9 pr-3 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:ring-gray-400 sm:w-72"
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <div ref={catComboRef} className="relative">
           <div
-            className="flex h-9 min-w-48 max-w-72 items-center rounded border border-stone-400 bg-white px-2 dark:border-gray-600 dark:bg-gray-900"
+            className="flex h-9 min-w-48 max-w-72 items-center rounded border border-stone-400 bg-stone-50 px-2 dark:border-gray-600 dark:bg-gray-900"
             onClick={() => { setCatOpen(true); catInputRef.current?.focus(); }}
           >
             <input
@@ -262,7 +262,7 @@ export function ProblemLibrary() {
             />
           </div>
           {catOpen && (
-            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-white text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
+            <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-stone-300 bg-stone-50 text-sm shadow-lg dark:border-gray-600 dark:bg-gray-900">
               {filteredCatOptions.length === 0 ? (
                 <li className="px-3 py-2 text-stone-400 dark:text-gray-500">No matches</li>
               ) : (
@@ -299,7 +299,7 @@ export function ProblemLibrary() {
                 className={`h-9 rounded px-3 text-sm font-medium transition ${
                   difficultyFilter === d
                     ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
-                    : "border border-stone-400 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                    : "border border-stone-400 bg-stone-50 text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                 }`}
               >
                 {d}
@@ -320,7 +320,7 @@ export function ProblemLibrary() {
                 className={`h-9 rounded px-3 text-sm font-medium transition ${
                   statusFilter === s.value
                     ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-gray-950"
-                    : "border border-stone-400 bg-white text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                    : "border border-stone-400 bg-stone-50 text-stone-600 hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                 }`}
               >
                 {s.label}
@@ -340,7 +340,7 @@ export function ProblemLibrary() {
             onClick={clearFilters}
             disabled={!hasActiveFilters}
             title="Clear filters"
-            className="flex h-9 w-9 items-center justify-center rounded border border-stone-400 bg-white text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-400 disabled:hover:bg-white disabled:hover:text-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:disabled:hover:border-gray-600 dark:disabled:hover:bg-gray-900 dark:disabled:hover:text-gray-400"
+            className="flex h-9 w-9 items-center justify-center rounded border border-stone-400 bg-stone-50 text-stone-500 transition hover:border-stone-600 hover:bg-stone-50 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-stone-400 disabled:hover:bg-white disabled:hover:text-stone-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:disabled:hover:border-gray-600 dark:disabled:hover:bg-gray-900 dark:disabled:hover:text-gray-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -357,7 +357,7 @@ export function ProblemLibrary() {
           {(["w-44", "w-36", "w-52", "w-40", "w-32"] as const).map((w) => (
             <div
               key={w}
-              className="rounded-xl border border-stone-400 bg-white dark:border-gray-600 dark:bg-gray-900"
+              className="rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
             >
               <div className="flex items-center justify-between px-4 py-3">
                 <div className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />
@@ -375,7 +375,7 @@ export function ProblemLibrary() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="h-9 rounded border border-stone-400 bg-white px-3 font-medium text-stone-700 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="h-9 rounded border border-stone-400 bg-stone-50 px-3 font-medium text-stone-700 transition hover:bg-stone-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 Clear Filters
               </button>

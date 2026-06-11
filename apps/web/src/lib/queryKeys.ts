@@ -6,6 +6,7 @@ export const queryKeys = {
   stats: ["stats"] as const,
   problems: ["problems"] as const,
   problem: (id: string) => ["problem", id] as const,
+  reviewLog: ["review-log"] as const,
 };
 
 /**
@@ -17,6 +18,7 @@ export function invalidateProblemData(qc: QueryClient, problemId?: string) {
   void qc.invalidateQueries({ queryKey: queryKeys.due });
   void qc.invalidateQueries({ queryKey: queryKeys.stats });
   void qc.invalidateQueries({ queryKey: queryKeys.problems });
+  void qc.invalidateQueries({ queryKey: queryKeys.reviewLog });
   if (problemId) {
     void qc.invalidateQueries({ queryKey: queryKeys.problem(problemId) });
   }

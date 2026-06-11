@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { BrainIcon } from "../components/BrainIcon";
+import { FireIcon } from "../components/FireIcon";
 import { FullScreenSpinner } from "../components/FullScreenSpinner";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { signInWithGoogle, useAuth } from "../lib/auth";
+import { useThemePreference } from "../lib/theme";
 import { supabase } from "../lib/supabase";
 
 export function Login() {
   const { session, loading } = useAuth();
+  const { isDark, setTheme } = useThemePreference();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,11 +32,18 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50 px-4 py-10 dark:bg-gray-950">
+    <div className="flex min-h-screen flex-col bg-stone-50 px-4 py-10 dark:bg-gray-950">
+      <div className="flex justify-end">
+        <ThemeToggle
+          isDark={isDark}
+          onToggle={() => setTheme(isDark ? "light" : "dark")}
+        />
+      </div>
+      <div className="flex flex-1 items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl border border-stone-300 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <div className="mb-6 flex flex-col items-center text-center">
           <Link to="/" aria-label="Leetcode SRS home">
-            <BrainIcon className="h-9 w-9 text-stone-800 dark:text-gray-100" />
+            <FireIcon className="h-9 w-9 text-stone-800 dark:text-gray-100" />
           </Link>
           <h1 className="mt-3 text-xl font-bold text-stone-900 dark:text-gray-100">
             Leetcode SRS
@@ -69,6 +79,7 @@ export function Login() {
           </Link>
           .
         </p>
+      </div>
       </div>
     </div>
   );

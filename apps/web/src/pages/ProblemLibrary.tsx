@@ -357,7 +357,7 @@ export function ProblemLibrary() {
           {(["w-44", "w-36", "w-52", "w-40", "w-32"] as const).map((w) => (
             <div
               key={w}
-              className="rounded-xl border border-stone-400 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
+              className="rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
             >
               <div className="flex items-center justify-between px-4 py-3">
                 <div className={`h-4 animate-pulse rounded bg-stone-200 dark:bg-gray-700 ${w}`} />

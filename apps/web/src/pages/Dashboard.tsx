@@ -154,7 +154,7 @@ export function Dashboard() {
       )}
 
       {loading && (
-        <section className="rounded-xl border border-stone-300 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <div className="mb-3 h-3 w-14 animate-pulse rounded bg-stone-200 dark:bg-gray-700" />
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-2">
@@ -170,7 +170,7 @@ export function Dashboard() {
       )}
 
       {!loading && upNext && (
-        <section className="rounded-xl border border-stone-300 bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+        <section className="rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-700 dark:text-gray-500">
             Up Next
           </p>
@@ -304,7 +304,7 @@ export function Dashboard() {
             {(["w-40", "w-32", "w-36"] as const).map((w) => (
               <div
                 key={w}
-                className="rounded-xl border border-stone-300 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
+                className="rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
               >
                 <div className="flex items-center justify-between px-4 py-3">
                   <div
@@ -325,7 +325,7 @@ export function Dashboard() {
               No due problems match "{search.trim()}".
             </p>
           ) : (
-            <ul className="divide-y divide-stone-300 rounded-xl border border-stone-300 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
+            <ul className="divide-y divide-stone-300 rounded-xl border border-black bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
               {searchResults.map((p) => (
                 <li
                   key={p.id}
@@ -394,7 +394,7 @@ export function Dashboard() {
               return (
                 <div
                   key={group.key}
-                  className="overflow-hidden rounded-xl border border-stone-300 bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
+                  className="overflow-hidden rounded-xl border border-black bg-stone-50 dark:border-gray-600 dark:bg-gray-900"
                 >
                   <div
                     role="button"
@@ -434,7 +434,7 @@ export function Dashboard() {
                     }}
                   >
                     <div style={{ overflow: "hidden" }}>
-                      <ul className="divide-y divide-stone-300 border-t border-stone-300 dark:divide-gray-600 dark:border-gray-600">
+                      <ul className="divide-y divide-black border-t border-black dark:divide-gray-600 dark:border-gray-600">
                         {group.problems.map((p) => (
                           <li
                             key={p.id}

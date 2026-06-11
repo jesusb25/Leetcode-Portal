@@ -42,9 +42,9 @@ export function Layout() {
           >
             <MenuIcon />
           </button>
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex cursor-pointer items-center gap-2">
             <BrainIcon />
-            <span className="text-lg font-bold text-stone-900 dark:text-gray-100">
+            <span className="cursor-pointer text-lg font-bold text-stone-900 dark:text-gray-100">
               Leetcode SRS
             </span>
           </Link>
@@ -102,7 +102,7 @@ function readStoredSidebar(): boolean {
 function BrainIcon() {
   return (
     <svg
-      className="h-5 w-5 text-stone-800 dark:text-gray-100"
+      className="pointer-events-none h-5 w-5 text-stone-800 dark:text-gray-100"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

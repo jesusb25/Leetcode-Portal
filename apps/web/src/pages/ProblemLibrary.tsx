@@ -21,7 +21,7 @@ const STATUSES: { value: ProblemStatus | "All"; label: string }[] = [
 const STATUS_STYLES: Record<ProblemStatus, { label: string; cls: string }> = {
   new: {
     label: "New",
-    cls: "bg-stone-100 text-stone-500 dark:bg-gray-800 dark:text-gray-400",
+    cls: "bg-stone-100 text-stone-700 dark:bg-gray-800 dark:text-gray-400",
   },
   attempted: {
     label: "Attempted",
@@ -290,7 +290,7 @@ export function ProblemLibrary() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-stone-400 dark:text-gray-500">Difficulty:</span>
+          <span className="text-xs font-medium text-stone-700 dark:text-gray-400">Difficulty:</span>
           <div className="flex gap-1">
             {DIFFICULTIES.map((d) => (
               <button
@@ -311,7 +311,7 @@ export function ProblemLibrary() {
         <span className="hidden h-6 w-px self-center bg-stone-200 dark:bg-gray-700 sm:mx-2 sm:block" />
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-stone-400 dark:text-gray-500">Status:</span>
+          <span className="text-xs font-medium text-stone-700 dark:text-gray-400">Status:</span>
           <div className="flex gap-1">
             {STATUSES.map((s) => (
               <button
@@ -444,7 +444,7 @@ export function ProblemLibrary() {
                             <div className="mt-1 flex flex-wrap items-center gap-2">
                               <DifficultyBadge difficulty={p.difficulty} />
                               <StatusBadge status={problemStatus(p)} />
-                              <span className="text-xs text-stone-400 dark:text-gray-500">
+                              <span className="text-xs text-stone-700 dark:text-gray-400">
                                 Reviewed {formatDate(p.schedule?.lastReviewedAt)} · Next{" "}
                                 {formatDate(p.schedule?.nextReviewAt)}
                               </span>

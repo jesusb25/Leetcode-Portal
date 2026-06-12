@@ -250,60 +250,58 @@ export function Dashboard() {
       {!loading && upNext && (
         <section
           key={upNext.id}
-          className="rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900"
+          className="flex items-center gap-4 rounded-xl border border-black bg-stone-50 p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900"
         >
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-700 dark:text-gray-500">
-            Up Next
-          </p>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <Link
-                  to={`/problems/${upNext.id}`}
-                  className="text-xl font-bold text-stone-900 hover:underline dark:text-gray-100"
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-stone-700 dark:text-gray-500">
+              Up Next
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Link
+                to={`/problems/${upNext.id}`}
+                className="text-xl font-bold text-stone-900 hover:underline dark:text-gray-100"
+              >
+                {upNext.title}
+              </Link>
+              <a
+                href={getProblemQuestionUrl(upNext)}
+                target="_blank"
+                rel="noreferrer"
+                title="Open on NeetCode"
+                aria-label={`Open ${upNext.title} on NeetCode`}
+                className="rounded p-1 text-stone-700 hover:text-stone-900 dark:hover:text-gray-200"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
                 >
-                  {upNext.title}
-                </Link>
-                <a
-                  href={getProblemQuestionUrl(upNext)}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="Open on NeetCode"
-                  aria-label={`Open ${upNext.title} on NeetCode`}
-                  className="rounded p-1 text-stone-700 hover:text-stone-900 dark:hover:text-gray-200"
-                >
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <path d="M15 3h6v6" />
-                    <path d="M10 14L21 3" />
-                  </svg>
-                </a>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <DifficultyBadge difficulty={upNext.difficulty} />
-                {upNext.category && (
-                  <span className="text-xs font-medium text-stone-700 dark:text-gray-400">
-                    {upNext.category.name}
-                  </span>
-                )}
-                {upNext.daysOverdue > 0 && (
-                  <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
-                    {`${upNext.daysOverdue} day${upNext.daysOverdue === 1 ? "" : "s"} overdue`}
-                  </span>
-                )}
-              </div>
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14L21 3" />
+                </svg>
+              </a>
             </div>
-            <DoneCheckbox size="lg" onCheck={() => markDone(upNext)} />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <DifficultyBadge difficulty={upNext.difficulty} />
+              {upNext.category && (
+                <span className="text-xs font-medium text-stone-700 dark:text-gray-400">
+                  {upNext.category.name}
+                </span>
+              )}
+              {upNext.daysOverdue > 0 && (
+                <span className="text-xs font-medium text-stone-700 dark:text-gray-500">
+                  {`${upNext.daysOverdue} day${upNext.daysOverdue === 1 ? "" : "s"} overdue`}
+                </span>
+              )}
+            </div>
           </div>
+          <DoneCheckbox size="lg" onCheck={() => markDone(upNext)} />
         </section>
       )}
 

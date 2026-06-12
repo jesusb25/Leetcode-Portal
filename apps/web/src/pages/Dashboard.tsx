@@ -61,7 +61,7 @@ function DoneCheckbox({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-label="Mark as done"
-      className={`relative shrink-0 ${dim} rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400`}
+      className={`relative shrink-0 self-center ${dim} rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-400`}
     >
       <svg viewBox="0 0 30 30" fill="none" aria-hidden="true" className="h-full w-full -rotate-90">
         {/* track */}

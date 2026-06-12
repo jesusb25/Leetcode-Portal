@@ -4,7 +4,9 @@ import type {
   ProblemWithSchedule,
   Review,
 } from "@repo/shared";
+import { intervalForReviewCount } from "@repo/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import confetti from "canvas-confetti";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CategoryBadge } from "../components/CategoryBadge";
@@ -127,6 +129,28 @@ export function ProblemDetail() {
     action: () => void;
   } | null>(null);
 
+  // --- Log Review button state ---
+  type LogReviewState = "idle" | "loading" | "success";
+  const [logReviewState, setLogReviewState] = useState<LogReviewState>("idle");
+  const logReviewSuccessTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const logReviewBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // --- Post-log success banner ---
+  const [reviewBanner, setReviewBanner] = useState<{
+    nextDays: number;
+    visible: boolean;
+  } | null>(null);
+  const bannerDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // --- Next Review flash ---
+  const [nextReviewFlash, setNextReviewFlash] = useState(false);
+  const nextReviewFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // --- Notes save indicator ---
+  type NotesSaveState = "idle" | "saving" | "saved";
+  const [notesSaveState, setNotesSaveState] = useState<NotesSaveState>("idle");
+  const notesSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // --- Undo toast ---
   const [undoToast, setUndoToast] = useState<{
     type: "review";
@@ -218,6 +242,7 @@ export function ProblemDetail() {
     if (!id) return;
     setError(null);
     setStudySaving(true);
+    setNotesSaveState("saving");
     try {
       const updated = await api.updateProblem(id, {
         problemSummary: problemSummary || undefined,
@@ -233,8 +258,12 @@ export function ProblemDetail() {
       studyDirtyRef.current = false;
       // Confidence ("Mastered") changes whether the problem is in the due queue.
       invalidateProblemData(queryClient, id);
+      setNotesSaveState("saved");
+      if (notesSavedTimer.current) clearTimeout(notesSavedTimer.current);
+      notesSavedTimer.current = setTimeout(() => setNotesSaveState("idle"), 2000);
     } catch (e) {
       setError((e as Error).message);
+      setNotesSaveState("idle");
     } finally {
       setStudySaving(false);
     }
@@ -272,9 +301,10 @@ export function ProblemDetail() {
   useEffect(() => {
     if (!studyDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    setNotesSaveState("saving");
     autoSaveTimer.current = setTimeout(
       () => void saveStudyNotesRef.current(),
-      1500,
+      800,
     );
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
@@ -294,9 +324,10 @@ export function ProblemDetail() {
   async function markDone() {
     if (!id) return;
     setError(null);
+    setLogReviewState("loading");
     try {
       // Flush any unsaved study note changes (e.g. confidence) before logging
-      // the review, otherwise a fast click wins the race against the 1.5s autosave.
+      // the review, otherwise a fast click wins the race against the autosave.
       if (studyDirty) {
         if (autoSaveTimer.current) {
           clearTimeout(autoSaveTimer.current);
@@ -304,10 +335,40 @@ export function ProblemDetail() {
         }
         await saveStudyNotes();
       }
-      await api.markDone(id);
+      const result = await api.markDone(id);
       await load();
       invalidateProblemData(queryClient, id);
+
+      // Transition button to success state, then back to idle after 1.5s.
+      setLogReviewState("success");
+      if (logReviewSuccessTimer.current) clearTimeout(logReviewSuccessTimer.current);
+      logReviewSuccessTimer.current = setTimeout(() => setLogReviewState("idle"), 1500);
+
+      // Confetti burst from the Log Review button.
+      const btnRect = logReviewBtnRef.current?.getBoundingClientRect();
+      const origin = btnRect
+        ? {
+            x: (btnRect.left + btnRect.width / 2) / window.innerWidth,
+            y: (btnRect.top + btnRect.height / 2) / window.innerHeight,
+          }
+        : { y: 0.6 };
+      void confetti({ particleCount: 80, spread: 70, origin });
+
+      // Show the banner with the interval from the scheduler.
+      const nextDays = intervalForReviewCount(result.reviewCount);
+      if (bannerDismissTimer.current) clearTimeout(bannerDismissTimer.current);
+      setReviewBanner({ nextDays, visible: true });
+      bannerDismissTimer.current = setTimeout(() => {
+        setReviewBanner((b) => (b ? { ...b, visible: false } : null));
+        setTimeout(() => setReviewBanner(null), 300);
+      }, 4000);
+
+      // Flash the next-review date in the review history list.
+      setNextReviewFlash(true);
+      if (nextReviewFlashTimer.current) clearTimeout(nextReviewFlashTimer.current);
+      nextReviewFlashTimer.current = setTimeout(() => setNextReviewFlash(false), 700);
     } catch (e) {
+      setLogReviewState("idle");
       setError((e as Error).message);
     }
   }
@@ -853,17 +914,71 @@ export function ProblemDetail() {
                 )}
               </div>
               <button
+                ref={logReviewBtnRef}
                 onClick={() => void markDone()}
-                className="mt-auto w-full rounded bg-stone-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                disabled={logReviewState !== "idle"}
+                className={`mt-auto w-full rounded px-3 py-1.5 text-xs font-medium transition
+                  ${logReviewState === "success"
+                    ? "bg-green-600 text-white dark:bg-green-500"
+                    : "bg-stone-900 text-white hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
+                  } disabled:cursor-not-allowed disabled:opacity-70`}
               >
-                Mark as Done
+                {logReviewState === "loading" ? (
+                  <span className="flex items-center justify-center gap-1.5">
+                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Logging…
+                  </span>
+                ) : logReviewState === "success" ? (
+                  "✓ Logged"
+                ) : (
+                  "Log Review"
+                )}
               </button>
             </div>
           </div>
 
+          {/* ── Post-log success banner ── */}
+          {reviewBanner && (
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-out ${
+                reviewBanner.visible ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-4 py-2.5 text-sm text-green-800 dark:border-green-700 dark:bg-green-950/40 dark:text-green-300">
+                <span>
+                  Review logged — next review in{" "}
+                  <strong>{reviewBanner.nextDays} {reviewBanner.nextDays === 1 ? "day" : "days"}</strong>
+                </span>
+                <button
+                  onClick={() => {
+                    if (bannerDismissTimer.current) clearTimeout(bannerDismissTimer.current);
+                    setReviewBanner((b) => (b ? { ...b, visible: false } : null));
+                    setTimeout(() => setReviewBanner(null), 300);
+                  }}
+                  aria-label="Dismiss"
+                  className="ml-4 shrink-0 rounded p-0.5 text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-100"
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Personal Notes ── */}
           <div className={sectionCls}>
-            <p className={sectionHeadCls}>Personal Notes</p>
+            <div className="flex items-center justify-between">
+              <p className={sectionHeadCls}>Personal Notes</p>
+              {notesSaveState !== "idle" && (
+                <span className={`text-xs transition-opacity duration-300 ${notesSaveState === "saving" ? "text-stone-400 dark:text-gray-500" : "text-green-600 dark:text-green-400"}`}>
+                  {notesSaveState === "saving" ? "Saving…" : "Saved"}
+                </span>
+              )}
+            </div>
             <textarea
               value={notes}
               onChange={(e) => markStudyDirty(setNotes)(e.target.value)}
@@ -909,7 +1024,7 @@ export function ProblemDetail() {
             </div>
             {!hasReviews ? (
               <p className="text-sm text-stone-500 dark:text-gray-400">
-                Not reviewed yet. Click "Mark as Done" to log your first review.
+                Not reviewed yet. Click "Log Review" to log your first review.
               </p>
             ) : (
               <ul className="divide-y divide-stone-300 rounded-xl border border-stone-400 bg-stone-50 dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-900">
@@ -945,7 +1060,13 @@ export function ProblemDetail() {
                           <span className="font-medium text-stone-900 dark:text-gray-100">
                             {formatDate(r.reviewedAt)}
                           </span>
-                          <span className="text-xs text-stone-400 dark:text-gray-500">
+                          <span
+                            className={`text-xs text-stone-400 dark:text-gray-500 rounded px-1 transition-colors duration-700 ${
+                              nextReviewFlash && r.id === reviewLog[0]?.id
+                                ? "bg-yellow-200 dark:bg-yellow-500/30"
+                                : "bg-transparent"
+                            }`}
+                          >
                             Review #{r.reviewCount} · next{" "}
                             {formatDate(r.nextReviewAt)}
                           </span>
@@ -1012,7 +1133,7 @@ export function ProblemDetail() {
             </div>
             <div className="space-y-4 p-5">
               <p className="text-sm text-stone-700 dark:text-gray-300">
-                You made changes but haven't logged a review. Do you want to mark this problem as done before leaving?
+                You made changes but haven't logged a review. Do you want to log a review before leaving?
               </p>
               <div className="flex gap-2">
                 <button
@@ -1025,7 +1146,7 @@ export function ProblemDetail() {
                   }}
                   className="flex-1 rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-stone-700 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-300"
                 >
-                  Mark as Done
+                  Log Review
                 </button>
                 <button
                   type="button"

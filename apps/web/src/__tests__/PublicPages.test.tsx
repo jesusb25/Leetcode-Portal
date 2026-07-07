@@ -17,7 +17,9 @@ afterEach(cleanup);
 describe("Privacy", () => {
   it("renders the policy with the Google Limited Use disclosure and a contact", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter
+        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
+      >
         <Privacy />
       </MemoryRouter>,
     );
@@ -39,7 +41,9 @@ describe("Privacy", () => {
 describe("Landing", () => {
   it("shows a sign-in call to action and a privacy policy link when signed out", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter
+        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
+      >
         <Landing />
       </MemoryRouter>,
     );

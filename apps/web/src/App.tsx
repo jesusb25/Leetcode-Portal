@@ -59,7 +59,7 @@ function AppRoutes() {
   useKeepAlive();
 
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <Suspense fallback={<FullScreenSpinner />}>
         <Routes>
           {/* Public — reachable without a session. The homepage and a public

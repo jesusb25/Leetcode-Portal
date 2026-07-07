@@ -39,7 +39,9 @@ function renderDashboard() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter
+        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
+      >
         <Dashboard />
       </MemoryRouter>
     </QueryClientProvider>,

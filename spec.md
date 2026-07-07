@@ -193,7 +193,7 @@ POST   /problems              Create a problem (manual entry)
                               Returns: Problem (201). Study fields are saved by later PUT /problems/:id.
 
 PUT    /problems/:id          Update problem metadata and/or study notes
-                              Returns: ProblemWithSchedule
+                              Returns: Problem
 
 DELETE /problems/:id          Delete a problem (204)
 
@@ -425,6 +425,28 @@ export interface ProblemWithSchedule extends Problem {
 
 export interface DueProblem extends ProblemWithSchedule {
   daysOverdue: number;
+}
+
+export interface CreateProblemBody {
+  leetcodeId?: number;
+  title: string;
+  url: string;
+  difficulty: Difficulty;
+  categoryId?: string;
+  isNeetcode150?: boolean;
+  notes?: string;
+  codeSnippet?: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+  language?: string;
+  problemSummary?: string;
+  confidence?: string;
+}
+
+export type UpdateProblemBody = Partial<CreateProblemBody>;
+
+export interface FetchMetadataBody {
+  url: string;
 }
 
 export interface Review {

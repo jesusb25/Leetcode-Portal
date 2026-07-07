@@ -1,11 +1,7 @@
 import CodeMirror from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
-import { java } from "@codemirror/lang-java";
-import { javascript } from "@codemirror/lang-javascript";
-import { python } from "@codemirror/lang-python";
-import { rust } from "@codemirror/lang-rust";
 import { EditorView } from "@codemirror/view";
-import { useEffect, useMemo, useState } from "react";
+import type { ComponentProps } from "react";
+import { useEffect, useState } from "react";
 
 function useIsDark() {
   const [isDark, setIsDark] = useState(() =>
@@ -22,22 +18,37 @@ function useIsDark() {
 }
 
 const lineWrap = EditorView.lineWrapping;
+type CodeMirrorExtensions = ComponentProps<typeof CodeMirror>["extensions"];
 
-function getExtensions(language: string) {
+async function getLanguageExtensions(
+  language: string,
+): Promise<CodeMirrorExtensions> {
   switch (language) {
-    case "Python":
+    case "Python": {
+      const { python } = await import("@codemirror/lang-python");
       return [python(), lineWrap];
-    case "JavaScript":
+    }
+    case "JavaScript": {
+      const { javascript } = await import("@codemirror/lang-javascript");
       return [javascript(), lineWrap];
-    case "TypeScript":
+    }
+    case "TypeScript": {
+      const { javascript } = await import("@codemirror/lang-javascript");
       return [javascript({ typescript: true }), lineWrap];
-    case "Java":
+    }
+    case "Java": {
+      const { java } = await import("@codemirror/lang-java");
       return [java(), lineWrap];
+    }
     case "C++":
-    case "C#":
+    case "C#": {
+      const { cpp } = await import("@codemirror/lang-cpp");
       return [cpp(), lineWrap];
-    case "Rust":
+    }
+    case "Rust": {
+      const { rust } = await import("@codemirror/lang-rust");
       return [rust(), lineWrap];
+    }
     default:
       return [lineWrap];
   }
@@ -51,8 +62,22 @@ interface CodeEditorProps {
 }
 
 export function CodeEditor({ value, onChange, language, minHeight = "200px" }: CodeEditorProps) {
-  const extensions = useMemo(() => getExtensions(language), [language]);
+  const [extensions, setExtensions] = useState<CodeMirrorExtensions>(() => [
+    lineWrap,
+  ]);
   const isDark = useIsDark();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getLanguageExtensions(language).then((nextExtensions) => {
+      if (!cancelled) setExtensions(nextExtensions);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   return (
     <CodeMirror

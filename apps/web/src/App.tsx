@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import {
   Navigate,
   Outlet,
@@ -11,14 +12,37 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import { supabase } from "./lib/supabase";
 import { useKeepAlive } from "./lib/useKeepAlive";
 import { useThemePreference } from "./lib/theme";
-import { AddProblem } from "./pages/AddProblem";
-import { Dashboard } from "./pages/Dashboard";
-import { Landing } from "./pages/Landing";
-import { Login } from "./pages/Login";
-import { Privacy } from "./pages/Privacy";
-import { ProblemDetail } from "./pages/ProblemDetail";
-import { ProblemLibrary } from "./pages/ProblemLibrary";
-import { ReviewLog } from "./pages/ReviewLog";
+
+const AddProblem = lazy(() =>
+  import("./pages/AddProblem").then(({ AddProblem }) => ({
+    default: AddProblem,
+  })),
+);
+const Dashboard = lazy(() =>
+  import("./pages/Dashboard").then(({ Dashboard }) => ({ default: Dashboard })),
+);
+const Landing = lazy(() =>
+  import("./pages/Landing").then(({ Landing }) => ({ default: Landing })),
+);
+const Login = lazy(() =>
+  import("./pages/Login").then(({ Login }) => ({ default: Login })),
+);
+const Privacy = lazy(() =>
+  import("./pages/Privacy").then(({ Privacy }) => ({ default: Privacy })),
+);
+const ProblemDetail = lazy(() =>
+  import("./pages/ProblemDetail").then(({ ProblemDetail }) => ({
+    default: ProblemDetail,
+  })),
+);
+const ProblemLibrary = lazy(() =>
+  import("./pages/ProblemLibrary").then(({ ProblemLibrary }) => ({
+    default: ProblemLibrary,
+  })),
+);
+const ReviewLog = lazy(() =>
+  import("./pages/ReviewLog").then(({ ReviewLog }) => ({ default: ReviewLog })),
+);
 
 export function App() {
   return (
@@ -36,26 +60,28 @@ function AppRoutes() {
 
   return (
     <Router>
-      <Routes>
-        {/* Public — reachable without a session. The homepage and a public
+      <Suspense fallback={<FullScreenSpinner />}>
+        <Routes>
+          {/* Public — reachable without a session. The homepage and a public
             privacy policy are prerequisites for Google OAuth verification. */}
-        <Route path="/" element={<LandingOrApp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/privacy" element={<Privacy />} />
+          <Route path="/" element={<LandingOrApp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/privacy" element={<Privacy />} />
 
-        {/* Protected app */}
-        <Route element={<RequireAuth />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/problems" element={<ProblemLibrary />} />
-            <Route path="/reviews" element={<ReviewLog />} />
-            <Route path="/problems/new" element={<AddProblem />} />
-            <Route path="/problems/:id" element={<ProblemDetail />} />
+          {/* Protected app */}
+          <Route element={<RequireAuth />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/problems" element={<ProblemLibrary />} />
+              <Route path="/reviews" element={<ReviewLog />} />
+              <Route path="/problems/new" element={<AddProblem />} />
+              <Route path="/problems/:id" element={<ProblemDetail />} />
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

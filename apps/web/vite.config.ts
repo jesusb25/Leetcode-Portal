@@ -17,6 +17,28 @@ function requireBuildEnv(): Plugin {
 
 export default defineConfig({
   plugins: [react(), requireBuildEnv()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@uiw/react-codemirror")) return "codemirror-react";
+          if (id.includes("@codemirror/lang-")) return "codemirror-languages";
+          if (id.includes("@codemirror/")) return "codemirror-core";
+          if (id.includes("@lezer/")) return "lezer";
+          if (id.includes("@sentry")) return "sentry";
+          if (
+            id.includes("react") ||
+            id.includes("react-dom") ||
+            id.includes("react-router") ||
+            id.includes("@tanstack/react-query")
+          ) {
+            return "react-vendor";
+          }
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
   },

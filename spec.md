@@ -6,6 +6,17 @@
 
 A full-stack web application for spaced repetition practice of LeetCode problems. The user works through the NeetCode 150 list and custom problems, with an auto-scheduler that surfaces the problems most overdue for review. Multi-user via Google OAuth (Supabase Auth); each new account is auto-provisioned with the NeetCode 150 on first sign-in.
 
+### 1.1 Current Stage
+
+The app is a deployed, usable MVP/beta:
+
+- Production deployment exists on Render: React static SPA (`leetcode-web`) plus Express API (`leetcode-api`), backed by Supabase Postgres/Auth.
+- Core study workflow is implemented end-to-end: sign in, auto-provision NeetCode 150, review due problems, undo accidental reviews, edit review history, add custom problems, fetch metadata, and maintain problem notes/code/complexity.
+- Dashboard, Problem Library, Add Problem, Problem Detail, Review Log, Landing, Login, and Privacy pages are implemented.
+- Security hardening is in place for the current stage: JWT auth, per-user query scoping, Supabase RLS migrations, Helmet, CORS allowlist, API rate limits, and metadata-fetch rate limits.
+- Automated coverage exists across shared scheduler logic, API routes/security/serializers, and key frontend flows.
+- Remaining work is polish and expansion rather than core build-out: CI/CD, richer progress analytics, mobile polish, and optional future planning features.
+
 ---
 
 ## 2. Tech Stack
@@ -44,7 +55,7 @@ A full-stack web application for spaced repetition practice of LeetCode problems
 
 ## 4. Database Schema
 
-All tables include `user_id` (UUID). Row-Level Security policies enforce `user_id = auth.uid()` via hand-written migration `0001_rls.sql`.
+User-owned tables include `user_id` (UUID). Row-Level Security policies enforce `user_id = auth.uid()` via hand-written migrations, currently `9998_user_provisioning.sql` and `9999_rls.sql`. Categories are shared reference data.
 
 ### 4.1 Tables
 
@@ -157,6 +168,7 @@ All endpoints (except `/health`) require a valid Supabase JWT in the `Authorizat
 
 ```
 GET    /health                No auth. Returns: { ok: true }
+                              Rate-limited separately from authenticated API routes.
 ```
 
 ### Account / Provisioning
@@ -177,8 +189,8 @@ GET    /problems/:id          Get single problem with schedule state
                               Returns: ProblemWithSchedule
 
 POST   /problems              Create a problem (manual entry)
-                              Body: { title, url, difficulty, categoryId?, leetcodeId?, ... }
-                              Returns: ProblemWithSchedule (201)
+                              Body: { title, url, difficulty, categoryId?, leetcodeId?, isNeetcode150? }
+                              Returns: Problem (201). Study fields are saved by later PUT /problems/:id.
 
 PUT    /problems/:id          Update problem metadata and/or study notes
                               Returns: ProblemWithSchedule
@@ -239,11 +251,13 @@ DELETE /reviews/:problemId/log/:reviewId
 ```
 GET    /schedule/due
   Problems due now (next_review_at <= now or never reviewed), sorted by most overdue
-  first. Never-reviewed problems rank above all dated rows.
+  first. Never-reviewed problems rank above all dated rows. Problems with
+  confidence = "Mastered" are excluded from the due queue.
   Returns: DueProblem[]
 
 GET    /schedule/stats
   Returns: { dueToday: number, completedToday: number }
+  dueToday excludes problems with confidence = "Mastered".
 ```
 
 ### Admin
@@ -335,7 +349,7 @@ All routes except `/landing`, `/login`, and `/privacy` are protected — require
 
 - URL field with "Fetch" button → calls `POST /problems/fetch-metadata`, auto-fills title, difficulty, LeetCode ID, and category
 - Manual override for all auto-filled fields
-- Submit → `POST /problems`, redirects to detail view
+- Submit → `POST /problems`, creates the metadata row, and redirects to detail view where study fields can be edited/autosaved
 
 ---
 
@@ -483,6 +497,8 @@ DEV_USER_ID=<uuid>                 # bypasses JWT validation in dev
 CORS_ORIGIN=http://localhost:5173  # required in production
 ```
 
+The API currently reads only the variables above. Local DB scripts also need `DATABASE_URL` available in the environment, commonly exported in the shell or placed in `packages/db/.env`.
+
 ### `apps/web/.env`
 
 ```
@@ -490,6 +506,8 @@ VITE_API_URL=http://localhost:3001/api/v1
 VITE_SUPABASE_URL=https://xxx.supabase.co   # leave unset to skip login screen in dev
 VITE_SUPABASE_ANON_KEY=...
 ```
+
+Production web builds fail fast if `VITE_API_URL` is not set, so deployed builds do not accidentally ship with the localhost API fallback.
 
 ---
 
@@ -499,7 +517,7 @@ VITE_SUPABASE_ANON_KEY=...
 - API middleware verifies JWT (ES256) against the project JWKS at `{SUPABASE_URL}/auth/v1/.well-known/jwks.json`
 - `req.userId` extracted from JWT `sub` claim; all queries scoped to it
 - Dev bypass: no token + `NODE_ENV !== "production"` → falls back to `DEV_USER_ID`
-- Supabase RLS enabled on all tables (`user_id = auth.uid()`)
+- Supabase RLS enabled on user-owned tables (`user_id = auth.uid()`); `user_provisioning` is server-managed and locked down by migration
 - First sign-in triggers `POST /me/bootstrap` from the frontend to provision NeetCode 150
 
 ---
@@ -530,7 +548,7 @@ pnpm build
 
 ---
 
-## 19. Definition of Done
+## 19. Shipped Scope
 
 - [x] Monorepo scaffolded with Turborepo + pnpm
 - [x] Drizzle schema created and migrations run against Supabase
@@ -555,10 +573,11 @@ pnpm build
 
 ---
 
-## 20. Out of Scope
+## 20. Remaining / Out of Scope
 
 - Email/password auth (Google OAuth only)
 - Streaks, heatmaps, mastery % by category
 - Interview date scheduling
-- Mobile responsiveness polish
 - CI/CD pipeline
+- Mobile responsiveness polish
+- Import/export flows and LeetCode account sync

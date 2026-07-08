@@ -191,4 +191,21 @@ Required production environment variables:
 | web | `VITE_API_URL` | API base URL ending in `/api/v1` |
 | web | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Supabase browser credentials |
 
+For the API `DATABASE_URL`, use one of Supabase's Postgres connection strings
+with the database password from Supabase's database settings:
+
+```bash
+# Runtime/API, transaction pooler:
+postgresql://postgres.<PROJECT-REF>:<DB-PASSWORD>@aws-0-<REGION>.pooler.supabase.com:6543/postgres
+
+# Migrations/DDL, direct connection:
+postgresql://postgres:<DB-PASSWORD>@db.<PROJECT-REF>.supabase.co:5432/postgres
+```
+
+If Render logs `PostgresError: password authentication failed for user
+"postgres"` (`28P01`), the deployed `DATABASE_URL` password or username format is
+wrong. Re-copy the connection string from Supabase, replace `<DB-PASSWORD>` with
+the current database password, URL-encode any special characters in the password,
+update Render's secret, then redeploy/restart the API service.
+
 Before public sign-in works, the Google OAuth consent screen must be configured and the production origin must be added to Supabase Auth settings.
